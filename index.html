@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Schedule &amp; Metrics</title>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#ffffff; --ink:#1a2433; --muted:#64748b; --line:#e2e8f0;
+  --accent:#2563eb; --accent-soft:#eff6ff;
+  --open:#b45309; --open-bg:#fef3c7;
+  --pl:#7c3aed; --pl-bg:#f3e8ff;
+  --soc:#0369a1; --soc-bg:#e0f2fe;
+  --off:#94a3b8; --off-bg:#f1f5f9;
+  --pto:#0f766e; --pto-bg:#ccfbf1;
+  --tr:#9d174d; --tr-bg:#fce7f3;
+  --good:#15803d; --bad:#b91c1c;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+button{font:inherit;cursor:pointer}
+select,input{font:inherit}
+.hdr{background:#0f2444;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.hdr h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.3px}
+.hdr .sub{font-size:11px;color:#9fb3d1;margin-top:1px}
+.hdr select{background:#1b3a66;color:#fff;border:1px solid #2e4f80;border-radius:6px;padding:6px 8px}
+.hdr .spacer{flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 12px;color:var(--ink)}
+.btn:hover{background:#f8fafc}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#1d4ed8}
+.btn.ghost{background:#1b3a66;border-color:#2e4f80;color:#fff}
+.btn.ghost:hover{background:#24497d}
+.btn.danger{color:var(--bad);border-color:#fecaca}
+.btn.sm{padding:3px 8px;font-size:12px}
+.tabs{display:flex;gap:2px;background:#0f2444;padding:0 20px}
+.tabs button{background:transparent;border:none;color:#9fb3d1;padding:9px 16px;border-radius:8px 8px 0 0;font-size:13.5px}
+.tabs button.on{background:var(--bg);color:var(--ink);font-weight:600}
+main{padding:18px 20px 60px;max-width:1650px;margin:0 auto}
+.grid-units{display:grid;grid-template-columns:repeat(auto-fill,minmax(720px,1fr));gap:14px}
+.ucard{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ucard h3{margin:0;padding:8px 12px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:14px;display:flex;gap:8px;align-items:center}
+.ucard h3 .tag{font-size:10.5px;background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:1px 8px;font-weight:600}
+table.sched{width:100%;border-collapse:collapse;table-layout:fixed}
+table.sched th,table.sched td{border:1px solid var(--line);padding:0;font-size:12px;text-align:center;vertical-align:top}
+table.sched th{background:#fbfcfe;padding:4px 2px;font-weight:600;color:var(--muted)}
+table.sched th .d{color:var(--ink)}
+table.sched td.time{background:#fbfcfe;font-size:11px;color:var(--muted);width:64px;padding:4px 2px;vertical-align:middle}
+.slot{min-height:26px;padding:3px 4px;cursor:pointer;line-height:1.25;border-bottom:1px dashed #eef2f7}
+.slot:last-child{border-bottom:none}
+.slot:hover{background:var(--accent-soft)}
+.slot .nm{font-weight:600;font-size:11.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot .nm.empty{color:#c3ccd9;font-weight:400}
+.slot .as{display:inline-block;font-size:9.5px;border-radius:8px;padding:0 6px;margin-top:1px;font-weight:600}
+.a-open{color:var(--open);background:var(--open-bg)}
+.a-pl{color:var(--pl);background:var(--pl-bg)}
+.a-soc{color:var(--soc);background:var(--soc-bg)}
+.a-oth{color:#334155;background:#e2e8f0}
+.a-pto{color:var(--pto);background:var(--pto-bg)}
+.a-tr{color:var(--tr);background:var(--tr-bg)}
+.nm.openName{color:var(--open)}
+.nm.dupe{color:var(--bad);font-weight:800}
+.slot.conflict{background:#fef2f2}
+.slot.conflict:hover{background:#fee2e2}
+td.dupe{color:var(--bad)!important;font-weight:800;background:#fef2f2!important}
+.conflict-banner{background:#fef2f2;border:1px solid #fecaca;color:var(--bad);padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:12.5px;font-weight:600;line-height:1.6}
+.conflict-banner b{font-weight:800}
+table.sched tr.sh0>td{background:#fffdf0}
+table.sched tr.sh1>td{background:#f2f8ff}
+table.sched tr.sh2>td{background:#f7f5ff}
+table.sched tr.sh0>td.time{background:#faf3d3}
+table.sched tr.sh1>td.time{background:#e2eefc}
+table.sched tr.sh2>td.time{background:#eae5fa}
+table.sched tr.shrow>td{border-top:2px solid #c7d2e0}
+table.sched td.time{cursor:pointer}
+table.sched td.time:hover{outline:2px solid var(--accent);outline-offset:-2px}
+.slot .tm{display:block;font-size:9px;color:#5b6b80;font-weight:600;margin-top:1px}
+.popover input[type=time]{flex:1;width:100%;padding:4px;border:1px solid var(--line);border-radius:6px}
+.popover{position:absolute;z-index:100;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(15,36,68,.18);padding:12px;width:240px}
+.popover label{display:block;font-size:11px;color:var(--muted);margin:6px 0 2px;font-weight:600}
+.popover select{width:100%;padding:5px;border:1px solid var(--line);border-radius:6px}
+.popover .row{display:flex;gap:8px;margin-top:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:16px}
+.card h2 small{color:var(--muted);font-weight:400;font-size:12px;margin-left:8px}
+table.plain{width:100%;border-collapse:collapse;font-size:13px}
+table.plain th,table.plain td{border:1px solid var(--line);padding:5px 8px;text-align:left}
+table.plain th{background:#f8fafc;font-weight:600;position:sticky;top:96px}
+table.plain input,table.plain select{width:100%;border:1px solid transparent;background:transparent;padding:3px;border-radius:4px}
+table.plain input:focus,table.plain select:focus{border-color:var(--accent);background:#fff;outline:none}
+.daily-wrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:8px}
+table.daily{border-collapse:collapse;font-size:12.5px;width:100%}
+table.daily th,table.daily td{border:1px solid var(--line);padding:4px 8px;white-space:nowrap}
+table.daily th{background:#f8fafc;position:sticky;top:0;z-index:2}
+table.daily td:first-child,table.daily th:first-child{position:sticky;left:0;background:#fff;font-weight:600;z-index:1}
+table.daily th:first-child{background:#f8fafc;z-index:3}
+td.cOFF{color:var(--off);background:var(--off-bg)}
+td.cOPEN{color:var(--open);background:var(--open-bg);font-weight:600}
+td.cPL{color:var(--pl);background:var(--pl-bg);font-weight:600}
+td.cSOC{color:var(--soc);background:var(--soc-bg)}
+.daychips{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.daychips button{border:1px solid var(--line);background:#fff;border-radius:16px;padding:5px 14px}
+.daychips button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.dayboard{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.shiftcol{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+.shiftcol h4{margin:0 0 8px;font-size:13px;color:var(--muted)}
+.shiftcol .ent{display:flex;justify-content:space-between;font-size:12.5px;padding:2.5px 4px;border-radius:4px}
+.shiftcol .ent:nth-child(even){background:#f8fafc}
+.shiftcol .ent b{font-weight:600}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px}
+.mrow{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;gap:8px}
+.mrow .lbl{font-size:12.5px}
+.mrow .val{font-weight:700;font-size:15px;text-align:right}
+.mrow input{width:90px;text-align:right;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-weight:700}
+.badge{font-size:9.5px;border-radius:8px;padding:1px 7px;font-weight:700;letter-spacing:.4px}
+.b-auto{background:#dcfce7;color:var(--good)}
+.b-man{background:#fee2e2;color:var(--bad)}
+.b-calc{background:var(--accent-soft);color:var(--accent)}
+.ovr{font-size:10px;color:var(--accent);cursor:pointer;text-decoration:underline;white-space:nowrap}
+.hist-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;max-height:60vh}
+table.hist{border-collapse:collapse;font-size:11.5px;white-space:nowrap}
+table.hist th,table.hist td{border:1px solid var(--line);padding:3px 7px;text-align:right}
+table.hist th{background:#f8fafc;position:sticky;top:0}
+table.hist td:first-child,table.hist th:first-child{text-align:left;position:sticky;left:0;background:#fff}
+table.hist th:first-child{background:#f8fafc;z-index:2}
+table.hist.ot td.otHot{color:var(--bad);font-weight:800}
+table.hist.ot tr.posttotals td{background:#f1f5f9;font-weight:800}
+tr.appweek td{background:#f0f9ff}
+.arch-item{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:8px;background:var(--card)}
+.arch-item .rng{font-weight:700;min-width:190px}
+.arch-item .meta{color:var(--muted);font-size:12px;flex:1}
+.modal-bg{position:fixed;inset:0;background:rgba(15,36,68,.45);z-index:200;display:flex;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:12px;padding:20px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{margin:0 0 14px}
+.modal label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:10px 0 4px}
+.modal input,.modal select{width:100%;padding:7px;border:1px solid var(--line);border-radius:6px}
+.modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.note{font-size:12px;color:var(--muted);margin:6px 0 14px}
+.settings-units td input{width:70px}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin:10px 0;flex-wrap:wrap;align-items:center}
+.legend .as{font-size:10px}
+#printArea{display:none}
+@media print{
+  @page{size:portrait;margin:9mm}
+  body{background:#fff}
+  .hdr,.tabs,main{display:none !important}
+  #printArea{display:block}
+  .ppage{page-break-after:always}
+  .ppage:last-child{page-break-after:auto}
+  .ppage h2{font-size:13pt;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;font-weight:700}
+  .ppage h2 span{font-weight:400;font-size:9pt;color:#444}
+  table.ptbl{width:100%;border-collapse:collapse;margin-bottom:9px;table-layout:fixed;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  table.ptbl td,table.ptbl th{border:1px solid #555;line-height:1.2;overflow:hidden}
+  table.ptbl td.ptitle{background:#dde5ee;font-weight:700;font-size:9pt;text-align:left;padding:2px 6px;letter-spacing:.3px}
+  table.ptbl th{background:#f0f2f5;font-size:7.5pt;padding:1px 2px;font-weight:700;text-align:center}
+  table.ptbl th .pdt{font-weight:400;font-size:6.5pt;color:#333}
+  table.ptbl th.plbl,table.ptbl td.plbl{width:34px;background:#f0f2f5;font-size:7pt;font-weight:700;text-align:center;vertical-align:middle}
+  table.ptbl td.ptm{font-size:6.5pt;color:#222;text-align:center;padding:0 1px;height:9px}
+  table.ptbl td.pnm{font-size:8pt;font-weight:600;text-align:center;padding:1px 2px;height:13px;white-space:nowrap}
+  table.ptbl td.pnm i{font-style:normal;font-weight:400;font-size:6.5pt;color:#444}
+  table.ptbl td.pnm.op{color:#92400e;background:#fef3c7}
+  table.ptbl tr.psh0 td.ptm{background:#fdf9e7}
+  table.ptbl tr.psh1 td.ptm{background:#eef4fd}
+  table.ptbl tr.psh2 td.ptm{background:#f1eefb}
+  table.ptbl tr.psh0 td.plbl{background:#f7f0cf}
+  table.ptbl tr.psh1 td.plbl{background:#dcebfb}
+  table.ptbl tr.psh2 td.plbl{background:#e5def7}
+}
+</style>
+</head>
+<body>
+<div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; min-width: 300px;">
+    <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem;">Security Schedule</h2>
+    <p style="margin: 0 0 1.5rem 0; color: #666;">Enter password to access</p>
+    <input type="password" id="loginPassword" placeholder="Password" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
+    <button id="loginBtn" class="btn" style="width: 100%; padding: 0.75rem;">Login</button>
+    <div id="loginError" style="color: #d32f2f; margin-top: 1rem; display: none; font-size: 0.9rem;"></div>
+  </div>
+</div>
+<div class="hdr">
+  <div>
+    <h1>Security Schedule &amp; Metrics</h1>
+    <div class="sub">Master schedule &middot; daily assignments &middot; weekly metrics</div>
+  </div>
+  <select id="weekSel" title="Schedule week"></select>
+  <button class="btn ghost" id="btnNewWeek">+ New Week</button>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="btnPrint">&#128424; Print</button>
+  <button class="btn ghost" id="btnLogout" style="color: #d32f2f;">Logout</button>
+</div>
+<div class="tabs" id="tabs"></div>
+<main id="view"></main>
+<div id="printArea"></div>
+<script>
+const SEED = {"units":[{"id":"24","title":"H1 Interior","group":"HQ","homeAssign":"Unit 24","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"25","title":"H1/W1 Exterior","group":"HQ","homeAssign":"Unit 25","shifts":[{"start":"06:00","end":"14:00"},{"start":"14:00","end":"22:00"},{"start":"22:00","end":"06:00"}]},{"id":"26","title":"W1/W2 Exterior","group":"HQ","homeAssign":"Unit 26","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"SOC","title":"","group":"HQ","homeAssign":"SOC","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"27","title":"H2 Interior","group":"HQ","homeAssign":"Unit 27","shifts":[{"start":"06:00","end":"14:00"},{"start":"14:00","end":"22:00"},{"start":"22:00","end":"06:00"}]},{"id":"28","title":"H2 Exterior","group":"HQ","homeAssign":"Unit 28","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"29","title":"East Campus","group":"HQ","homeAssign":"Unit 29","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"34","title":"WH","group":"NC","homeAssign":"Unit 34","shifts":[{"start":"06:00","end":"14:00"},{"start":"14:00","end":"22:00"},{"start":"22:00","end":"06:00"}]},{"id":"30","title":"NC Exterior 1","group":"NC","homeAssign":"Unit 30","shifts":[{"start":"06:00","end":"14:00"},{"start":"14:00","end":"22:00"},{"start":"22:00","end":"06:00"}]},{"id":"31","title":"NC Exterior 2","group":"NC","homeAssign":"Unit 31","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"33","title":"North Campus Interior","group":"NC","homeAssign":"Unit 33","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"35","title":"WQ","group":"NC","homeAssign":"Unit 35","shifts":[{"start":"06:00","end":"14:00"},{"start":"14:00","end":"22:00"},{"start":"22:00","end":"06:00"}]},{"id":"32","title":"WG","group":"NC","homeAssign":"Unit 32","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"36","title":"H4","group":"H4","homeAssign":"Unit 36","shifts":[{"start":"07:00","end":"15:00"},{"start":"15:00","end":"23:00"},{"start":"23:00","end":"07:00"}]},{"id":"SRO","title":"","group":"","homeAssign":"SRO","shifts":[{"start":"07:00","end":"15:00"},{"start":"07:00","end":"15:00"},{"start":"07:00","end":"15:00"}]}],"schedule":{"24":[[[{"emp":"Alec Ryan","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Terren Carleton","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Ethan Burrow","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Ethan Burrow","assign":"Unit 24","start":"07:00","end":"16:00"},{"emp":"","assign":""}],[{"emp":"Ethan Burrow","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Ethan Burrow","assign":"Unit 24","start":"07:00","end":"16:00"},{"emp":"","assign":""}],[{"emp":"Ethan Burrow","assign":"Unit 24"},{"emp":"","assign":""}]],[[{"emp":"Ben Colburn","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Ben Colburn","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Ian Sommer","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Ian Sommer","assign":"Unit 24","start":"16:00","end":"23:00"},{"emp":"","assign":""}],[{"emp":"Ian Sommer","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Ian Sommer","assign":"Unit 24","start":"16:00","end":"23:00"},{"emp":"","assign":""}],[{"emp":"Ian Sommer","assign":"Unit 24"},{"emp":"","assign":""}]],[[{"emp":"Thomas Szostak","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"Thomas Szostak","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"DL Ross","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"DL Ross","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"DL Ross","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"DL Ross","assign":"Unit 24"},{"emp":"","assign":""}],[{"emp":"DL Ross","assign":"Unit 24"},{"emp":"","assign":""}]]],"27":[[[{"emp":"Milagro McGee","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Milagro McGee","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Searia Bailey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Searia Bailey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Searia Bailey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Searia Bailey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Searia Bailey","assign":"Unit 27"},{"emp":"","assign":""}]],[[{"emp":"Tyler Elk","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Tyler Elk","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Dan Thornton","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"David Ryherd","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Dan Thornton","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Dan Thornton","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Dan Thornton","assign":"Unit 27"},{"emp":"","assign":""}]],[[{"emp":"Brian Bohnert","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Katelyn Casey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Katelyn Casey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Katelyn Casey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Katelyn Casey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Katelyn Casey","assign":"Unit 27"},{"emp":"","assign":""}],[{"emp":"Alan Padfield","assign":"Unit 27"},{"emp":"","assign":""}]]],"30":[[[{"emp":"OPEN","assign":"Unit 30","start":"06:00","end":"10:00"},{"emp":"Tyler Elk","assign":"Unit 30","start":"10:00","end":"14:00"}],[{"emp":"OPEN","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Joe Ranchel","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Joe Ranchel","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Joe Ranchel","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Joe Ranchel","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Joe Ranchel","assign":"Unit 30","start":"06:00","end":"10:00"},{"emp":"","assign":""}]],[[{"emp":"Markima Starks","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Markima Starks","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Scott Ginkowski","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Scott Ginkowski","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Scott Ginkowski","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Scott Ginkowski","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Nakia Armstead","assign":"Unit 30"},{"emp":"","assign":""}]],[[{"emp":"Joe Burt","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Chris Tabb","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Zachary Watson","assign":"Unit 30"},{"emp":"","assign":""}],[{"emp":"Zachary Watson","assign":"Unit 30"},{"emp":"","assign":""}]]],"32":[[[{"emp":"Jose De La Rosa","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Nestor Soriano","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Jose De La Rosa","assign":"Unit 32","start":"07:00","end":"19:00"},{"emp":"","assign":""}],[{"emp":"Jose De La Rosa","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Jeffrey Rzeplinski","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Jose De La Rosa","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Jose De La Rosa","assign":"Unit 32"},{"emp":"","assign":""}]],[[{"emp":"Tim Gray","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Tim Gray","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Jaydon McBain","assign":"Unit 32","start":"19:00","end":"23:00"},{"emp":"","assign":""}],[{"emp":"Tim Gray","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Brian Solais","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Brian Solais","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Brian Solais","assign":"Unit 32"},{"emp":"","assign":""}]],[[{"emp":"Zachary Watson","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Ron Permann","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Lawrence Mayer","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Lawrence Mayer","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Lawrence Mayer","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Lawrence Mayer","assign":"Unit 32"},{"emp":"","assign":""}],[{"emp":"Lawrence Mayer","assign":"Unit 32"},{"emp":"","assign":""}]]],"25":[[[{"emp":"Donovan Gibbs","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Donovan Gibbs","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Terren Carleton","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Terren Carleton","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Terren Carleton","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Donovan Gibbs","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Donovan Gibbs","assign":"Unit 25"},{"emp":"","assign":""}]],[[{"emp":"George Gimbel","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"George Gimbel","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"George Gimbel","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"George Gimbel","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"George Gimbel","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"George Gimbel","assign":"Unit 25"},{"emp":"","assign":""}]],[[{"emp":"Alan Padfield","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Sydney Prouty","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Sydney Prouty","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Sydney Prouty","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Alan Padfield","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Alan Padfield","assign":"Unit 25"},{"emp":"","assign":""}],[{"emp":"Tania Ward","assign":"Unit 25"},{"emp":"","assign":""}]]],"28":[[[{"emp":"Nestor Soriano","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Thomas Szostak","assign":"Unit 28","start":"07:00","end":"11:00"},{"emp":"OPEN","assign":"Unit 28","start":"11:00","end":"15:00"}],[{"emp":"Milagro McGee","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Milagro McGee","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Milagro McGee","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Alec Ryan","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 28"},{"emp":"","assign":""}]],[[{"emp":"Benjamin Smith","assign":"Unit 28","start":"15:00","end":"03:00"},{"emp":"","assign":""}],[{"emp":"Benjamin Smith","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Benjamin Smith","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Dan Thornton","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Benjamin Smith","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Tylan Avant","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Tylan Avant","assign":"Unit 28"},{"emp":"","assign":""}]],[[{"emp":"OPEN","assign":"Unit 28","start":"03:00","end":"07:00"},{"emp":"","assign":""}],[{"emp":"Alan Padfield","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Scott Juhola","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Scott Juhola","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Brian Bohnert","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Brian Bohnert","assign":"Unit 28"},{"emp":"","assign":""}],[{"emp":"Brian Bohnert","assign":"Unit 28"},{"emp":"","assign":""}]]],"31":[[[{"emp":"James Selovich","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"James Selovich","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"James Selovich","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"James Selovich","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"James Selovich","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Terren Carleton","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"James Selovich","assign":"Unit 31"},{"emp":"","assign":""}]],[[{"emp":"Scott Ginkowski","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Robert Boyd","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Markima Starks","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Tyler Elk","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Tyler Elk","assign":"Unit 31"},{"emp":"","assign":""}]],[[{"emp":"Ron Permann","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Joe Burt","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Joe Burt","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Joe Burt","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Joe Burt","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Chyna Colon","assign":"Unit 31"},{"emp":"","assign":""}],[{"emp":"Ron Permann","assign":"Unit 31"},{"emp":"","assign":""}]]],"36":[[[{"emp":"Muhamer Llapashtica","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Muhamer Llapashtica","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":"Unit 36"},{"emp":"","assign":""}]],[[{"emp":"Leonard Davis","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Leonard Davis","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Muhamer Llapashtica","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Ian Sommer","assign":"Unit 36","start":"15:00","end":"16:00"},{"emp":"Muhamer Llapashtica","assign":"Unit 36","start":"16:00","end":"23:00"}],[{"emp":"Muhamer Llapashtica","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Gabriella Torrez","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Gabriella Torrez","assign":"Unit 36"},{"emp":"","assign":""}]],[[{"emp":"Krystin Gooden","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Zachary Watson","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Zachary Watson","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Krystin Gooden","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Krystin Gooden","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Krystin Gooden","assign":"Unit 36"},{"emp":"","assign":""}],[{"emp":"Krystin Gooden","assign":"Unit 36"},{"emp":"","assign":""}]]],"26":[[[{"emp":"Adam Clark","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Adam Clark","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Norma Mayfield","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Norma Mayfield","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Norma Mayfield","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Norma Mayfield","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Alec Ryan","assign":"Unit 26"},{"emp":"","assign":""}]],[[{"emp":"Tylan Avant","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Tylan Avant","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Tylan Avant","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Jaydon McBain","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Tylan Avant","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Leonard Davis","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Leonard Davis","assign":"Unit 26"},{"emp":"","assign":""}]],[[{"emp":"Maryann Larson","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Maryann Larson","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Maryann Larson","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Maryann Larson","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Sydney Prouty","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Tania Ward","assign":"Unit 26"},{"emp":"","assign":""}],[{"emp":"Maryann Larson","assign":"Unit 26"},{"emp":"","assign":""}]]],"29":[[[{"emp":"Nakia Armstead","assign":"Unit 29","start":"07:00","end":"19:00"},{"emp":"","assign":""}],[{"emp":"Nakia Armstead","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Ryan Nelson","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Ryan Nelson","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Ryan Nelson","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Ryan Nelson","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Ryan Nelson","assign":"Unit 29"},{"emp":"","assign":""}]],[[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"Jaydon McBain","assign":"Unit 29"},{"emp":"Jeffrey Prewitt","assign":"Unit 29 PTO"}],[{"emp":"Ben Colburn","assign":"Unit 29"},{"emp":"Jeffrey Prewitt","assign":"Unit 29 PTO"}],[{"emp":"Ben Colburn","assign":"Unit 29"},{"emp":"Jeffrey Prewitt","assign":"Unit 29 PTO"}],[{"emp":"Jaydon McBain","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Markima Starks","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Markima Starks","assign":"Unit 29"},{"emp":"","assign":""}]],[[{"emp":"Kiarra Taylor","assign":"Unit 29","start":"19:00","end":"07:00"},{"emp":"","assign":""}],[{"emp":"Kiarra Taylor","assign":"Unit 29"},{"emp":"Deonne Harris","assign":"Unit 29 PTO"}],[{"emp":"Kiarra Taylor","assign":"Unit 29"},{"emp":"Deonne Harris","assign":"Unit 29 PTO"}],[{"emp":"Kiarra Taylor","assign":"Unit 29"},{"emp":"Deonne Harris","assign":"Unit 29 PTO"}],[{"emp":"Chyna Colon","assign":"Unit 29"},{"emp":"Deonne Harris","assign":"Unit 29 PTO"}],[{"emp":"Kiarra Taylor","assign":"Unit 29"},{"emp":"","assign":""}],[{"emp":"Kiarra Taylor","assign":"Unit 29"},{"emp":"","assign":""}]]],"33":[[[{"emp":"Alex Hupfeld","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Alex Hupfeld","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Lindsay Joyce","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Lindsay Joyce","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Lindsay Joyce","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Lindsay Joyce","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Lindsay Joyce","assign":"Unit 33"},{"emp":"","assign":""}]],[[{"emp":"Brian Solais","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Brian Solais","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"John Yancey","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"John Yancey","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"John Yancey","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"John Yancey","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"John Yancey","assign":"Unit 33"},{"emp":"","assign":""}]],[[{"emp":"John Yancey","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Chyna Colon","assign":"Unit 33"},{"emp":"Chris Jenkins","assign":"Unit 33 PTO"}],[{"emp":"Shelley Meyer","assign":"Unit 33"},{"emp":"Chris Jenkins","assign":"Unit 33 PTO"}],[{"emp":"Shelley Meyer","assign":"Unit 33"},{"emp":"Chris Jenkins","assign":"Unit 33 PTO"}],[{"emp":"Shelley Meyer","assign":"Unit 33"},{"emp":"Chris Jenkins","assign":"Unit 33 PTO"}],[{"emp":"Shelley Meyer","assign":"Unit 33"},{"emp":"","assign":""}],[{"emp":"Shelley Meyer","assign":"Unit 33"},{"emp":"","assign":""}]]],"SRO":[[[{"emp":"Dear Deari","assign":""},{"emp":"","assign":""}],[{"emp":"Dear Deari","assign":""},{"emp":"","assign":""}],[{"emp":"Dear Deari","assign":""},{"emp":"","assign":""}],[{"emp":"Dear Deari","assign":""},{"emp":"","assign":""}],[{"emp":"Jeffrey Rzeplinski","assign":""},{"emp":"","assign":""}],[{"emp":"Alec Ryan","assign":""},{"emp":"","assign":""}],[{"emp":"Alec Ryan","assign":""},{"emp":"","assign":""}]],[[{"emp":"","assign":""},{"emp":"Leonard Davis","assign":""}],[{"emp":"","assign":""},{"emp":"Leonard Davis","assign":""}],[{"emp":"","assign":""},{"emp":"Jaydon McBain","assign":""}],[{"emp":"","assign":""},{"emp":"Jaydon McBain","assign":""}],[{"emp":"","assign":""},{"emp":"Jaydon McBain","assign":""}],[{"emp":"","assign":""},{"emp":"George Gimbel","assign":""}],[{"emp":"","assign":""},{"emp":"George Gimbel","assign":""}]],[[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}],[{"emp":"","assign":""},{"emp":"","assign":""}]]],"SOC":[[[{"emp":"Matt Crader","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Alec Ryan","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Matt Crader","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Matt Crader","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Matt Crader","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Matt Crader","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Matt Crader","assign":"SOC"},{"emp":"","assign":""}]],[[{"emp":"David Ryherd","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"David Ryherd","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Brian Solais","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Daniel Martinez","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"David Ryherd","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"David Ryherd","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"David Ryherd","assign":"SOC"},{"emp":"","assign":""}]],[[{"emp":"Chris Tabb","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Chris Tabb","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Chris Tabb","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Chris Tabb","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Thomas Szostak","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Thomas Szostak","assign":"SOC"},{"emp":"","assign":""}],[{"emp":"Thomas Szostak","assign":"SOC"},{"emp":"","assign":""}]]],"34":[[[{"emp":"Jeffrey Rzeplinski","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Jeffrey Rzeplinski","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Cynthia McGruder","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Cynthia McGruder","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Cynthia McGruder","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Cynthia McGruder","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Cynthia McGruder","assign":"Unit 34"},{"emp":"","assign":""}]],[[{"emp":"Gabriella Torrez","assign":"Unit 34","start":"14:00","end":"18:00"},{"emp":"","assign":""}],[{"emp":"Gabriella Torrez","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Leonard Davis","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"OPEN","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Tim Gray","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Tim Gray","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Tim Gray","assign":"Unit 34"},{"emp":"","assign":""}]],[[{"emp":"Tania Ward","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Tania Ward","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Peter Janits","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Peter Janits","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Scott Juhola","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Scott Juhola","assign":"Unit 34"},{"emp":"","assign":""}],[{"emp":"Ben Colburn","assign":"Unit 34"},{"emp":"","assign":""}]]],"35":[[[{"emp":"Jamie Pankoff","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Jamie Pankoff","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Jeffrey Rzeplinski","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Jeffrey Rzeplinski","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Nakia Armstead","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Nakia Armstead","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Jamie Pankoff","assign":"Unit 35"},{"emp":"","assign":""}]],[[{"emp":"Robert Boyd","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Scott Ginkowski","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Gabriella Torrez","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Gabriella Torrez","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Robert Boyd","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Robert Boyd","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Robert Boyd","assign":"Unit 35"},{"emp":"","assign":""}]],[[{"emp":"Peter Janits","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Peter Janits","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Chyna Colon","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Chyna Colon","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Ron Permann","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Sydney Prouty","assign":"Unit 35"},{"emp":"","assign":""}],[{"emp":"Peter Janits","assign":"Unit 35"},{"emp":"","assign":""}]]]},"employees":[{"name":"Adam Clark","unit":"Unit 26","building":"HQ","desc":"W1/W2 Exterior"},{"name":"Alan Padfield","unit":"Unit 25","building":"HQ","desc":"H1/W1 Exterior"},{"name":"Alec Ryan","unit":"SRO","building":"","desc":""},{"name":"Alex Hupfeld","unit":"Unit 33","building":"NC","desc":"North Campus Interior"},{"name":"Ben Colburn","unit":"Unit 24","building":"HQ","desc":"H1 Interior"},{"name":"Benjamin Smith","unit":"Unit 28","building":"HQ","desc":"H2 Exterior"},{"name":"Brian Bohnert","unit":"Unit 28","building":"HQ","desc":"H2 Exterior"},{"name":"Brian Genz","unit":"","building":"","desc":""},{"name":"Brian Solais","unit":"Unit 32","building":"NC","desc":"WG"},{"name":"Chris Jenkins","unit":"Unit 33","building":"NC","desc":"North Campus Interior"},{"name":"Chris Tabb","unit":"SOC","building":"HQ","desc":""},{"name":"Chyna Colon","unit":"Unit 35","building":"NC","desc":"WQ"},{"name":"Cynthia McGruder","unit":"Unit 34","building":"NC","desc":"WH"},{"name":"Dan Koon","unit":"","building":"","desc":""},{"name":"Dan Thornton","unit":"Unit 27","building":"HQ","desc":"H2 Interior"},{"name":"Daniel Martinez","unit":"SOC","building":"HQ","desc":""},{"name":"David Ryherd","unit":"SOC","building":"HQ","desc":""},{"name":"Dear Deari","unit":"SRO","building":"","desc":""},{"name":"Deonne Harris","unit":"Unit 29","building":"HQ","desc":"East Campus"},{"name":"DL Ross","unit":"Unit 24","building":"HQ","desc":"H1 Interior"},{"name":"Donovan Gibbs","unit":"Unit 25","building":"HQ","desc":"H1/W1 Exterior"},{"name":"Ethan Burrow","unit":"Unit 24","building":"HQ","desc":"H1 Interior"},{"name":"Gabriella Torrez","unit":"Unit 36","building":"H4","desc":"H4"},{"name":"George Gimbel","unit":"Unit 25","building":"HQ","desc":"H1/W1 Exterior"},{"name":"Ian Sommer","unit":"Unit 24","building":"HQ","desc":"H1 Interior"},{"name":"James Selovich","unit":"Unit 31","building":"NC","desc":"NC Exterior 2"},{"name":"Jamie Pankoff","unit":"Unit 35","building":"NC","desc":"WQ"},{"name":"Jaydon McBain","unit":"SRO","building":"","desc":""},{"name":"Jeffrey Prewitt","unit":"Unit 29","building":"HQ","desc":"East Campus"},{"name":"Jeffrey Rzeplinski","unit":"Unit 34","building":"NC","desc":"WH"},{"name":"Joe Burt","unit":"Unit 31","building":"NC","desc":"NC Exterior 2"},{"name":"Joe Ranchel","unit":"Unit 30","building":"NC","desc":"NC Exterior 1"},{"name":"John Yancey","unit":"Unit 33","building":"NC","desc":"North Campus Interior"},{"name":"Jose De La Rosa","unit":"Unit 32","building":"NC","desc":"WG"},{"name":"Katelyn Casey","unit":"Unit 27","building":"HQ","desc":"H2 Interior"},{"name":"Kiarra Taylor","unit":"Unit 29","building":"HQ","desc":"East Campus"},{"name":"Krystin Gooden","unit":"Unit 36","building":"H4","desc":"H4"},{"name":"Lawrence Mayer","unit":"Unit 32","building":"NC","desc":"WG"},{"name":"Leonard Davis","unit":"Unit 36","building":"H4","desc":"H4"},{"name":"Lindsay Joyce","unit":"Unit 33","building":"NC","desc":"North Campus Interior"},{"name":"Marissa Joyce","unit":"","building":"","desc":""},{"name":"Markima Starks","unit":"Unit 30","building":"NC","desc":"NC Exterior 1"},{"name":"Maryann Larson","unit":"Unit 26","building":"HQ","desc":"W1/W2 Exterior"},{"name":"Matt Crader","unit":"SOC","building":"HQ","desc":""},{"name":"Milagro McGee","unit":"Unit 28","building":"HQ","desc":"H2 Exterior"},{"name":"Muhamer Llapashtica","unit":"Unit 36","building":"H4","desc":"H4"},{"name":"Nakia Armstead","unit":"Unit 29","building":"HQ","desc":"East Campus"},{"name":"Nestor Soriano","unit":"Unit 32","building":"NC","desc":"WG"},{"name":"Nevaeh Williams","unit":"","building":"","desc":""},{"name":"Norma Mayfield","unit":"Unit 26","building":"HQ","desc":"W1/W2 Exterior"},{"name":"Peter Janits","unit":"Unit 35","building":"NC","desc":"WQ"},{"name":"Robert Boyd","unit":"Unit 35","building":"NC","desc":"WQ"},{"name":"Ron Permann","unit":"Unit 31","building":"NC","desc":"NC Exterior 2"},{"name":"Ryan Nelson","unit":"Unit 29","building":"HQ","desc":"East Campus"},{"name":"Scott Ginkowski","unit":"Unit 30","building":"NC","desc":"NC Exterior 1"},{"name":"Scott Juhola","unit":"Unit 28","building":"HQ","desc":"H2 Exterior"},{"name":"Searia Bailey","unit":"Unit 27","building":"HQ","desc":"H2 Interior"},{"name":"Shelley Meyer","unit":"Unit 33","building":"NC","desc":"North Campus Interior"},{"name":"Sydney Prouty","unit":"Unit 25","building":"HQ","desc":"H1/W1 Exterior"},{"name":"Tania Ward","unit":"Unit 34","building":"NC","desc":"WH"},{"name":"Terren Carleton","unit":"Unit 25","building":"HQ","desc":"H1/W1 Exterior"},{"name":"Thomas Szostak","unit":"SOC","building":"HQ","desc":""},{"name":"Tim Gray","unit":"Unit 32","building":"NC","desc":"WG"},{"name":"Tylan Avant","unit":"Unit 26","building":"HQ","desc":"W1/W2 Exterior"},{"name":"Tyler Elk","unit":"Unit 27","building":"HQ","desc":"H2 Interior"},{"name":"Zachary Watson","unit":"Unit 30","building":"NC","desc":"NC Exterior 1"},{"name":"OPEN","unit":"Unit 30","building":"NC","desc":"NC Exterior 1"}],"metricsHistory":[{"Month":"January","Order":1,"Week":1,"Quarter":1,"Date Range":"12-27-25 to 01-02-26","Total Hrs Worked":2400.25,"Total NBOT Hours":155,"NBOT %":0.0645766066034788,"Pipeline Hrs":152,"OPEN Hrs":88,"Total Hrs Short":240,"SRO Hours Available":152,"Workforce Shortage":88,"Call Ins":1,"Call In Hrs":8,"Scheduled Days Off":2,"Scheduled Hrs Off":16,"Scheduled Shifts":299,"Dark Post Hrs":49.5,"Dark Post %":0.019959677419354838,"Shift Coverage %":0.9800403225806451,"Call In %":0.0033444816053511705,"Call In National Average":0.032,"H4 Hrs":128.25,"H4 NBOT":0,"HQ Hrs":1392.5,"HQ NBOT":136,"NC Hrs":878.75,"NC NBOT":19},{"Month":"January","Order":2,"Week":2,"Quarter":1,"Date Range":"01-03-26 to 01-09-26","Total Hrs Worked":2351.5,"Total NBOT Hours":102.25,"NBOT %":0.04348288326600042,"Pipeline Hrs":184,"OPEN Hrs":160,"Total Hrs Short":344,"SRO Hours Available":152,"Workforce Shortage":192,"Call Ins":3,"Call In Hrs":24,"Scheduled Days Off":6,"Scheduled Hrs Off":48,"Scheduled Shifts":286,"Dark Post Hrs":35.5,"Dark Post %":0.014314516129032258,"Shift Coverage %":0.9856854838709678,"Call In %":0.01048951048951049,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":0,"HQ Hrs":1354.25,"HQ NBOT":85.25,"NC Hrs":867.75,"NC NBOT":17},{"Month":"January","Order":3,"Week":3,"Quarter":1,"Date Range":"01-10-26 to 01-16-26","Total Hrs Worked":2308.25,"Total NBOT Hours":80.25,"NBOT %":0.03476659807213257,"Pipeline Hrs":184,"OPEN Hrs":160,"Total Hrs Short":344,"SRO Hours Available":152,"Workforce Shortage":192,"Call Ins":6,"Call In Hrs":48,"Scheduled Days Off":1,"Scheduled Hrs Off":8,"Scheduled Shifts":286,"Dark Post Hrs":56,"Dark Post %":0.02258064516129032,"Shift Coverage %":0.9774193548387097,"Call In %":0.02097902097902098,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":0,"HQ Hrs":1343.5,"HQ NBOT":60,"NC Hrs":836,"NC NBOT":20.25},{"Month":"January","Order":4,"Week":4,"Quarter":1,"Date Range":"01-17-26 to 01-23-26","Total Hrs Worked":2309.5,"Total NBOT Hours":113.25,"NBOT %":0.04903658800606192,"Pipeline Hrs":144,"OPEN Hrs":224,"Total Hrs Short":368,"SRO Hours Available":152,"Workforce Shortage":216,"Call Ins":9,"Call In Hrs":72,"Scheduled Days Off":5,"Scheduled Hrs Off":40,"Scheduled Shifts":286,"Dark Post Hrs":90.75,"Dark Post %":0.03659274193548387,"Shift Coverage %":0.9634072580645161,"Call In %":0.03146853146853147,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":0,"HQ Hrs":1333,"HQ NBOT":80.25,"NC Hrs":920.25,"NC NBOT":33},{"Month":"January","Order":5,"Week":5,"Quarter":1,"Date Range":"01-24-26 to 01-30-26","Total Hrs Worked":2465.5,"Total NBOT Hours":131.75,"NBOT %":0.05343743662543095,"Pipeline Hrs":144,"OPEN Hrs":232,"Total Hrs Short":376,"SRO Hours Available":152,"Workforce Shortage":224,"Call Ins":1,"Call In Hrs":8,"Scheduled Days Off":9,"Scheduled Hrs Off":72,"Scheduled Shifts":308,"Dark Post Hrs":56.25,"Dark Post %":0.022681451612903226,"Shift Coverage %":0.9773185483870968,"Call In %":0.003246753246753247,"Call In National Average":0.032,"H4 Hrs":129,"H4 NBOT":0,"HQ Hrs":1496.25,"HQ NBOT":116.75,"NC Hrs":829.75,"NC NBOT":15},{"Month":"February","Order":6,"Week":1,"Quarter":1,"Date Range":"01-31-26 to 02-06-26","Total Hrs Worked":2329.25,"Total NBOT Hours":111.5,"NBOT %":0.04786948588601481,"Pipeline Hrs":144,"OPEN Hrs":192,"Total Hrs Short":336,"SRO Hours Available":152,"Workforce Shortage":184,"Call Ins":4,"Call In Hrs":32,"Scheduled Days Off":14,"Scheduled Hrs Off":112,"Scheduled Shifts":280,"Dark Post Hrs":70.75,"Dark Post %":0.028528225806451615,"Shift Coverage %":0.9714717741935484,"Call In %":0.014285714285714285,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":0,"HQ Hrs":1361.25,"HQ NBOT":64.25,"NC Hrs":835,"NC NBOT":47.25},{"Month":"February","Order":7,"Week":2,"Quarter":1,"Date Range":"02-07-26 to 02-13-26","Total Hrs Worked":2439,"Total NBOT Hours":125.45,"NBOT %":0.051435014350143506,"Pipeline Hrs":104,"OPEN Hrs":192,"Total Hrs Short":296,"SRO Hours Available":152,"Workforce Shortage":144,"Call Ins":3,"Call In Hrs":20,"Scheduled Days Off":14,"Scheduled Hrs Off":112,"Scheduled Shifts":290,"Dark Post Hrs":86.5,"Dark Post %":0.03487903225806452,"Shift Coverage %":0.9651209677419355,"Call In %":0.010344827586206896,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":4,"HQ Hrs":1452.25,"HQ NBOT":69.25,"NC Hrs":856.25,"NC NBOT":52.2},{"Month":"February","Order":8,"Week":3,"Quarter":1,"Date Range":"02-14-26 to 02-20-26","Total Hrs Worked":2470.75,"Total NBOT Hours":147.5,"NBOT %":0.05969847212384903,"Pipeline Hrs":136,"OPEN Hrs":160,"Total Hrs Short":296,"SRO Hours Available":152,"Workforce Shortage":144,"Call Ins":4,"Call In Hrs":32,"Scheduled Days Off":14,"Scheduled Hrs Off":112,"Scheduled Shifts":297,"Dark Post Hrs":64.5,"Dark Post %":0.026008064516129033,"Shift Coverage %":0.973991935483871,"Call In %":0.013468013468013467,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":14,"HQ Hrs":1453.5,"HQ NBOT":97.5,"NC Hrs":880.75,"NC NBOT":36},{"Month":"February","Order":9,"Week":4,"Quarter":1,"Date Range":"02-21-26 to 02-27-26","Total Hrs Worked":2374,"Total NBOT Hours":91.5,"NBOT %":0.038542544229149114,"Pipeline Hrs":136,"OPEN Hrs":128,"Total Hrs Short":264,"SRO Hours Available":152,"Workforce Shortage":112,"Call Ins":6,"Call In Hrs":48,"Scheduled Days Off":5,"Scheduled Hrs Off":40,"Scheduled Shifts":292,"Dark Post Hrs":52.25,"Dark Post %":0.021068548387096774,"Shift Coverage %":0.9789314516129032,"Call In %":0.02054794520547945,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":0.75,"HQ Hrs":1402.75,"HQ NBOT":40.25,"NC Hrs":841.25,"NC NBOT":50.5},{"Month":"March","Order":10,"Week":1,"Quarter":1,"Date Range":"02-28-26 to 03-06-26","Total Hrs Worked":2300.25,"Total NBOT Hours":132.5,"NBOT %":0.057602434517987175,"Pipeline Hrs":136,"OPEN Hrs":96,"Total Hrs Short":232,"SRO Hours Available":152,"Workforce Shortage":80,"Call Ins":6,"Call In Hrs":72,"Scheduled Days Off":26,"Scheduled Hrs Off":208,"Scheduled Shifts":297,"Dark Post Hrs":64,"Dark Post %":0.025806451612903226,"Shift Coverage %":0.9741935483870968,"Call In %":0.020202020202020204,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":8,"HQ Hrs":1460.75,"HQ NBOT":74.75,"NC Hrs":859.5,"NC NBOT":49.75},{"Month":"March","Order":11,"Week":2,"Quarter":1,"Date Range":"03-07-26 to 03-13-26","Total Hrs Worked":2322.5,"Total NBOT Hours":146.5,"NBOT %":0.06307857911733046,"Pipeline Hrs":136,"OPEN Hrs":96,"Total Hrs Short":232,"SRO Hours Available":152,"Workforce Shortage":80,"Call Ins":10,"Call In Hrs":80,"Scheduled Days Off":21,"Scheduled Hrs Off":168,"Scheduled Shifts":291,"Dark Post Hrs":72.75,"Dark Post %":0.02933467741935484,"Shift Coverage %":0.9706653225806452,"Call In %":0.03436426116838488,"Call In National Average":0.032,"H4 Hrs":129,"H4 NBOT":13,"HQ Hrs":1343.75,"HQ NBOT":85.5,"NC Hrs":848.75,"NC NBOT":48},{"Month":"March","Order":12,"Week":3,"Quarter":1,"Date Range":"03-14-26 to 03-20-26","Total Hrs Worked":2289.5,"Total NBOT Hours":81.25,"NBOT %":0.03548809783795589,"Pipeline Hrs":168,"OPEN Hrs":104,"Total Hrs Short":272,"SRO Hours Available":152,"Workforce Shortage":120,"Call Ins":13,"Call In Hrs":104,"Scheduled Days Off":11,"Scheduled Hrs Off":88,"Scheduled Shifts":291,"Dark Post Hrs":124,"Dark Post %":0.05,"Shift Coverage %":0.95,"Call In %":0.044673539518900345,"Call In National Average":0.032,"H4 Hrs":136,"H4 NBOT":0,"HQ Hrs":1375.5,"HQ NBOT":56.5,"NC Hrs":771.75,"NC NBOT":24.75},{"Month":"March","Order":13,"Week":4,"Quarter":1,"Date Range":"03-21-26 to 03-27-26","Total Hrs Worked":2399,"Total NBOT Hours":66.5,"NBOT %":0.02771988328470196,"Pipeline Hrs":168,"OPEN Hrs":104,"Total Hrs Short":272,"SRO Hours Available":152,"Workforce Shortage":120,"Call Ins":3,"Call In Hrs":24,"Scheduled Days Off":12,"Scheduled Hrs Off":96,"Scheduled Shifts":292,"Dark Post Hrs":49,"Dark Post %":0.01975806451612903,"Shift Coverage %":0.980241935483871,"Call In %":0.010273972602739725,"Call In National Average":0.032,"H4 Hrs":133.25,"H4 NBOT":1.25,"HQ Hrs":1353,"HQ NBOT":38.75,"NC Hrs":836.25,"NC NBOT":26.5},{"Month":"March","Order":14,"Week":5,"Quarter":2,"Date Range":"03-28-26 to 04-03-26","Total Hrs Worked":2357.5,"Total NBOT Hours":81.5,"NBOT %":0.03457051961823966,"Pipeline Hrs":128,"OPEN Hrs":168,"Total Hrs Short":296,"SRO Hours Available":152,"Workforce Shortage":144,"Call Ins":5,"Call In Hrs":40,"Scheduled Days Off":3,"Scheduled Hrs Off":24,"Scheduled Shifts":291,"Dark Post Hrs":63.75,"Dark Post %":0.025705645161290324,"Shift Coverage %":0.9742943548387096,"Call In %":0.01718213058419244,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":4,"HQ Hrs":1408.75,"HQ NBOT":46.25,"NC Hrs":816.25,"NC NBOT":31.25},{"Month":"April","Order":15,"Week":1,"Quarter":2,"Date Range":"04-04-26 to 04-10-26","Total Hrs Worked":2361.25,"Total NBOT Hours":117,"NBOT %":0.049550026469031234,"Pipeline Hrs":192,"OPEN Hrs":192,"Total Hrs Short":384,"SRO Hours Available":168,"Workforce Shortage":216,"Call Ins":7,"Call In Hrs":56,"Scheduled Days Off":6,"Scheduled Hrs Off":48,"Scheduled Shifts":290,"Dark Post Hrs":90.75,"Dark Post %":0.03659274193548387,"Shift Coverage %":0.9634072580645161,"Call In %":0.02413793103448276,"Call In National Average":0.032,"H4 Hrs":136,"H4 NBOT":4,"HQ Hrs":1391.5,"HQ NBOT":78.75,"NC Hrs":832,"NC NBOT":34.25},{"Month":"April","Order":16,"Week":2,"Quarter":2,"Date Range":"04-11-26 to 04-17-26","Total Hrs Worked":2441.5,"Total NBOT Hours":132.5,"NBOT %":0.05426991603522425,"Pipeline Hrs":192,"OPEN Hrs":192,"Total Hrs Short":384,"SRO Hours Available":168,"Workforce Shortage":216,"Call Ins":4,"Call In Hrs":32,"Scheduled Days Off":14,"Scheduled Hrs Off":112,"Scheduled Shifts":293,"Dark Post Hrs":57.5,"Dark Post %":0.023185483870967742,"Shift Coverage %":0.9768145161290323,"Call In %":0.013651877133105802,"Call In National Average":0.032,"H4 Hrs":137,"H4 NBOT":5,"HQ Hrs":1395.75,"HQ NBOT":62.75,"NC Hrs":908,"NC NBOT":64.75},{"Month":"April","Order":17,"Week":3,"Quarter":2,"Date Range":"04-18-26 to 04-24-26","Total Hrs Worked":2354,"Total NBOT Hours":80.75,"NBOT %":0.034303313508920984,"Pipeline Hrs":216,"OPEN Hrs":176,"Total Hrs Short":392,"SRO Hours Available":168,"Workforce Shortage":224,"Call Ins":4,"Call In Hrs":32,"Scheduled Days Off":8,"Scheduled Hrs Off":64,"Scheduled Shifts":299,"Dark Post Hrs":54,"Dark Post %":0.021774193548387097,"Shift Coverage %":0.978225806451613,"Call In %":0.013377926421404682,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":0,"HQ Hrs":1435,"HQ NBOT":55.25,"NC Hrs":840.25,"NC NBOT":25.5},{"Month":"April","Order":18,"Week":4,"Quarter":2,"Date Range":"04-25-26 to 05-01-26","Total Hrs Worked":2322.25,"Total NBOT Hours":106,"NBOT %":0.04564538701690171,"Pipeline Hrs":216,"OPEN Hrs":176,"Total Hrs Short":392,"SRO Hours Available":168,"Workforce Shortage":224,"Call Ins":5,"Call In Hrs":40,"Scheduled Days Off":9,"Scheduled Hrs Off":72,"Scheduled Shifts":287,"Dark Post Hrs":45.75,"Dark Post %":0.01844758064516129,"Shift Coverage %":0.9815524193548387,"Call In %":0.017421602787456445,"Call In National Average":0.032,"H4 Hrs":128.5,"H4 NBOT":0.75,"HQ Hrs":1355,"HQ NBOT":83.25,"NC Hrs":853.5,"NC NBOT":22},{"Month":"May","Order":19,"Week":1,"Quarter":2,"Date Range":"05-02-26 to 05-08-26","Total Hrs Worked":2338.5,"Total NBOT Hours":86.75,"NBOT %":0.03709642933504383,"Pipeline Hrs":248,"OPEN Hrs":72,"Total Hrs Short":320,"SRO Hours Available":168,"Workforce Shortage":152,"Call Ins":4,"Call In Hrs":32,"Scheduled Days Off":1,"Scheduled Hrs Off":8,"Scheduled Shifts":289,"Dark Post Hrs":37.75,"Dark Post %":0.015221774193548388,"Shift Coverage %":0.9847782258064516,"Call In %":0.01384083044982699,"Call In National Average":0.032,"H4 Hrs":133.5,"H4 NBOT":4.25,"HQ Hrs":1364.25,"HQ NBOT":58.25,"NC Hrs":840,"NC NBOT":24.25},{"Month":"May","Order":20,"Week":2,"Quarter":2,"Date Range":"05-09-26 to 05-15-26","Total Hrs Worked":2346.25,"Total NBOT Hours":103.75,"NBOT %":0.04421949920085243,"Pipeline Hrs":248,"OPEN Hrs":72,"Total Hrs Short":320,"SRO Hours Available":168,"Workforce Shortage":152,"Call Ins":6,"Call In Hrs":48,"Scheduled Days Off":17,"Scheduled Hrs Off":136,"Scheduled Shifts":293,"Dark Post Hrs":85.75,"Dark Post %":0.034576612903225806,"Shift Coverage %":0.9654233870967742,"Call In %":0.020477815699658702,"Call In National Average":0.032,"H4 Hrs":127.75,"H4 NBOT":11.5,"HQ Hrs":1343.75,"HQ NBOT":63.75,"NC Hrs":872.75,"NC NBOT":28.5},{"Month":"May","Order":21,"Week":3,"Quarter":2,"Date Range":"05-16-26 to 05-22-26","Total Hrs Worked":2435.75,"Total NBOT Hours":113.5,"NBOT %":0.04659755722056862,"Pipeline Hrs":248,"OPEN Hrs":72,"Total Hrs Short":320,"SRO Hours Available":168,"Workforce Shortage":152,"Call Ins":3,"Call In Hrs":24,"Scheduled Days Off":16,"Scheduled Hrs Off":128,"Scheduled Shifts":286,"Dark Post Hrs":53.25,"Dark Post %":0.021471774193548388,"Shift Coverage %":0.9785282258064516,"Call In %":0.01048951048951049,"Call In National Average":0.032,"H4 Hrs":127.25,"H4 NBOT":2.25,"HQ Hrs":1417.5,"HQ NBOT":81.75,"NC Hrs":890,"NC NBOT":29.5},{"Month":"May","Order":22,"Week":4,"Quarter":2,"Date Range":"05-23-26 to 05-29-26","Total Hrs Worked":2411.25,"Total NBOT Hours":95.5,"NBOT %":0.03960601347848626,"Pipeline Hrs":248,"OPEN Hrs":72,"Total Hrs Short":320,"SRO Hours Available":136,"Workforce Shortage":184,"Call Ins":2,"Call In Hrs":16,"Scheduled Days Off":6,"Scheduled Hrs Off":48,"Scheduled Shifts":298,"Dark Post Hrs":12,"Dark Post %":0.004838709677419355,"Shift Coverage %":0.9951612903225806,"Call In %":0.006711409395973154,"Call In National Average":0.032,"H4 Hrs":159.5,"H4 NBOT":3,"HQ Hrs":1378.5,"HQ NBOT":39.25,"NC Hrs":849.75,"NC NBOT":53.25},{"Month":"June","Order":23,"Week":1,"Quarter":2,"Date Range":"05-30-26 to 06-05-26","Total Hrs Worked":2403,"Total NBOT Hours":136.75,"NBOT %":0.05690803162713275,"Pipeline Hrs":248,"OPEN Hrs":72,"Total Hrs Short":320,"SRO Hours Available":136,"Workforce Shortage":184,"Call Ins":2,"Call In Hrs":16,"Scheduled Days Off":13,"Scheduled Hrs Off":104,"Scheduled Shifts":295,"Dark Post Hrs":30.75,"Dark Post %":0.012399193548387097,"Shift Coverage %":0.9876008064516129,"Call In %":0.006779661016949152,"Call In National Average":0.032,"H4 Hrs":127.75,"H4 NBOT":7.5,"HQ Hrs":1438.25,"HQ NBOT":73,"NC Hrs":836.5,"NC NBOT":56.25},{"Month":"June","Order":24,"Week":2,"Quarter":2,"Date Range":"06-06-26 to 06-12-26","Total Hrs Worked":2338.25,"Total NBOT Hours":60,"NBOT %":0.025660215973484442,"Pipeline Hrs":168,"OPEN Hrs":168,"Total Hrs Short":336,"SRO Hours Available":136,"Workforce Shortage":200,"Call Ins":3,"Call In Hrs":24,"Scheduled Days Off":10,"Scheduled Hrs Off":80,"Scheduled Shifts":299,"Dark Post Hrs":74.75,"Dark Post %":0.030141129032258063,"Shift Coverage %":0.9698588709677419,"Call In %":0.010033444816053512,"Call In National Average":0.032,"H4 Hrs":127.25,"H4 NBOT":0.25,"HQ Hrs":1359,"HQ NBOT":27.75,"NC Hrs":844,"NC NBOT":32},{"Month":"June","Order":25,"Week":3,"Quarter":2,"Date Range":"06-13-26 to 06-19-26","Total Hrs Worked":2361.25,"Total NBOT Hours":111.25,"NBOT %":0.047114875595553204,"Pipeline Hrs":104,"OPEN Hrs":248,"Total Hrs Short":352,"SRO Hours Available":136,"Workforce Shortage":216,"Call Ins":3,"Call In Hrs":24,"Scheduled Days Off":10,"Scheduled Hrs Off":80,"Scheduled Shifts":null,"Dark Post Hrs":78.75,"Dark Post %":0.031754032258064516,"Shift Coverage %":0.9682459677419355,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":124,"H4 NBOT":0,"HQ Hrs":1395,"HQ NBOT":61.5,"NC Hrs":842.25,"NC NBOT":49.75},{"Month":"June","Order":26,"Week":4,"Quarter":2,"Date Range":"06-20-26 to 06-26-26","Total Hrs Worked":0,"Total NBOT Hours":99.75,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":1,"Call In Hrs":8,"Scheduled Days Off":16,"Scheduled Hrs Off":128,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":128,"H4 NBOT":6.75,"HQ Hrs":1401.5,"HQ NBOT":44.75,"NC Hrs":844.25,"NC NBOT":48.25},{"Month":"July","Order":27,"Week":5,"Quarter":3,"Date Range":"06-27-26 to 07-03-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"July","Order":28,"Week":1,"Quarter":3,"Date Range":"07-04-26 to 07-10-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"July","Order":29,"Week":2,"Quarter":3,"Date Range":"07-11-26 to 07-17-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"July","Order":30,"Week":3,"Quarter":3,"Date Range":"07-18-26 to 07-24-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"July","Order":31,"Week":4,"Quarter":3,"Date Range":"07-25-26 to 07-31-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"August","Order":32,"Week":1,"Quarter":3,"Date Range":"08-01-26 to 08-07-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"August","Order":33,"Week":2,"Quarter":3,"Date Range":"08-08-26 to 08-14-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"August","Order":34,"Week":3,"Quarter":3,"Date Range":"08-15-26 to 08-21-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"August","Order":35,"Week":4,"Quarter":3,"Date Range":"08-22-26 to 08-28-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"September","Order":36,"Week":1,"Quarter":3,"Date Range":"08-29-26 to 09-04-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"September","Order":37,"Week":2,"Quarter":3,"Date Range":"09-05-26 to 09-11-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"September","Order":38,"Week":3,"Quarter":3,"Date Range":"09-12-26 to 09-18-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"September","Order":39,"Week":4,"Quarter":3,"Date Range":"09-19-26 to 09-25-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"September","Order":40,"Week":5,"Quarter":3,"Date Range":"09-26-26 to 10-02-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"October","Order":41,"Week":1,"Quarter":4,"Date Range":"10-03-26 to 10-09-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"October","Order":42,"Week":2,"Quarter":4,"Date Range":"10-10-26 to 10-16-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"October","Order":43,"Week":3,"Quarter":4,"Date Range":"10-17-26 to 10-23-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"October","Order":44,"Week":4,"Quarter":4,"Date Range":"10-24-26 to 10-30-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"November","Order":45,"Week":1,"Quarter":4,"Date Range":"10-31-26 to 11-06-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"November","Order":46,"Week":2,"Quarter":4,"Date Range":"11-07-26 to 11-13-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"November","Order":47,"Week":3,"Quarter":4,"Date Range":"11-14-26 to 11-20-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"November","Order":48,"Week":4,"Quarter":4,"Date Range":"11-21-26 to 11-27-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"December","Order":49,"Week":1,"Quarter":4,"Date Range":"11-28-26 to 12-04-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"December","Order":50,"Week":2,"Quarter":4,"Date Range":"12-05-26 to 12-11-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"December","Order":51,"Week":3,"Quarter":4,"Date Range":"12-12-26 to 12-18-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"December","Order":52,"Week":4,"Quarter":4,"Date Range":"12-19-26 to 12-25-26","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0},{"Month":"December","Order":53,"Week":5,"Quarter":4,"Date Range":"12-26-26 to 01-01-27","Total Hrs Worked":0,"Total NBOT Hours":0,"NBOT %":null,"Pipeline Hrs":null,"OPEN Hrs":null,"Total Hrs Short":0,"SRO Hours Available":null,"Workforce Shortage":0,"Call Ins":null,"Call In Hrs":null,"Scheduled Days Off":null,"Scheduled Hrs Off":null,"Scheduled Shifts":null,"Dark Post Hrs":0,"Dark Post %":null,"Shift Coverage %":null,"Call In %":null,"Call In National Average":0.032,"H4 Hrs":0,"H4 NBOT":0,"HQ Hrs":0,"HQ NBOT":0,"NC Hrs":0,"NC NBOT":0}],"printPages":[{"header":"24/25/26/SOC","units":["24","25","26","SOC"]},{"header":"27/28/29/34","units":["27","28","29","34"]},{"header":"30/31/33/35","units":["30","31","33","35"]},{"header":"32/36/SRO","units":["32","36","SRO"]}],"weekKey":"2026-07-04"};
+
+/* ---------- constants ---------- */
+const LS_KEY = 'secSchedApp.v1';
+const DAYS = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
+const DAYS_SHORT = ['Sat','Sun','Mon','Tue','Wed','Thu','Fri'];
+const SHIFT_NAMES = ['Day','Evening','Night'];
+const SLOTS_PER = 2;
+const TABS = [['schedule','Schedule'],['daily','Daily Schedule'],['ot','OT Tracker'],['metrics','Weekly Metrics'],['employees','Employees'],['archive','Archive'],['settings','Settings']];
+
+/* ---------- state ---------- */
+let state = null;
+let ui = { tab:'schedule', day: null, editingOvr:{} };
+let dupeInfo = {};
+
+function unitLabel(u){ return /^\d/.test(u.id) ? 'Unit '+u.id : u.id; }
+function unitGrid(w,u){
+  if(!w.schedule[u.id]) w.schedule[u.id] = [0,1,2].map(()=>DAYS.map(()=>Array.from({length:SLOTS_PER},()=>({emp:'',assign:''}))));
+  return w.schedule[u.id];
+}
+function lastSaturday(d){
+  const x = new Date(d); x.setHours(0,0,0,0);
+  while(x.getDay()!==6) x.setDate(x.getDate()-1);
+  return x;
+}
+function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseISO(s){ const [y,m,dd]=s.split('-').map(Number); return new Date(y,m-1,dd); }
+function fmtRange(weekKey){
+  const s = parseISO(weekKey), e = new Date(s); e.setDate(e.getDate()+6);
+  const f = d => String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'-'+String(d.getFullYear()).slice(2);
+  return f(s)+' to '+f(e);
+}
+function dayDate(weekKey,i){ const d=parseISO(weekKey); d.setDate(d.getDate()+i); return (d.getMonth()+1)+'/'+d.getDate(); }
+
+function blankWeekSchedule(){
+  const sched = {};
+  state.units.forEach(u=>{ sched[u.id] = [0,1,2].map(()=>DAYS.map(()=>Array.from({length:SLOTS_PER},()=>({emp:'',assign:''})))); });
+  return sched;
+}
+function freshUnits(){ return JSON.parse(JSON.stringify(SEED.units)); }
+function freshEmployees(){ return SEED.employees.map((e,i)=>({ id:'e'+(i+1), name:e.name, unit:e.unit, building:e.building, desc:e.desc, active:true })); }
+function seededWeek(){ return { schedule: JSON.parse(JSON.stringify(SEED.schedule)), metrics:{}, createdAt:new Date().toISOString() }; }
+function buildInitialState(){
+  const st = {
+    units: freshUnits(),
+    employees: freshEmployees(),
+    weeks:{},
+    currentWeek: SEED.weekKey,
+    settings:{ totalPostHours:2480, callInNatAvg:0.032 },
+    printPages: JSON.parse(JSON.stringify(SEED.printPages)),
+    metricsHistory: SEED.metricsHistory
+  };
+  st.weeks[SEED.weekKey] = seededWeek();
+  return st;
+}
+function migrate(){
+  // upgrade pre-print-layout saves: refresh units/roster to the current master file,
+  // keep saved weeks, metrics and settings, and add the new seeded week
+  if(state.printPages) return;
+  state.units = freshUnits();
+  state.employees = freshEmployees();
+  state.printPages = JSON.parse(JSON.stringify(SEED.printPages));
+  if(!state.weeks[SEED.weekKey]) state.weeks[SEED.weekKey] = seededWeek();
+  state.currentWeek = SEED.weekKey;
+  persist();
+}
+function load(){
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw){ state = JSON.parse(raw); migrate(); return; } }catch(e){}
+  state = buildInitialState();
+  persist();
+}
+function persist(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+/* ---------- helpers ---------- */
+function week(){ return state.weeks[state.currentWeek]; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function shiftHours(u,si){
+  const [sh,sm]=u.shifts[si].start.split(':').map(Number), [eh,em]=u.shifts[si].end.split(':').map(Number);
+  let h = (eh+em/60)-(sh+sm/60); if(h<=0) h+=24; return h;
+}
+function slotHours(u,si,sl){
+  if(sl && sl.start && sl.end){
+    const [sh,sm]=sl.start.split(':').map(Number), [eh,em]=sl.end.split(':').map(Number);
+    let h=(eh+em/60)-(sh+sm/60); if(h<=0) h+=24; return h;
+  }
+  return shiftHours(u,si);
+}
+function assignClass(a, unit){
+  if(!a) return '';
+  if(a==='OPEN') return 'a-open';
+  if(a==='PL') return 'a-pl';
+  if(a==='PTO') return 'a-pto';
+  if(a==='SOC') return 'a-soc';
+  if(a==='TR') return 'a-tr';
+  if(unit && a===unit.homeAssign) return '';
+  return 'a-oth';
+}
+function assignOptions(){
+  const opts = new Set();
+  state.units.forEach(u=>opts.add(u.homeAssign));
+  ['Unit SRO','SOC','PL','OPEN','PTO','TR'].forEach(o=>opts.add(o));
+  return [...opts].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+}
+function activeEmployees(){ return state.employees.filter(e=>e.active).sort((a,b)=>a.name.localeCompare(b.name)); }
+function fmtNum(v){ if(v==null||isNaN(v)) return '—'; return (+v).toLocaleString(undefined,{maximumFractionDigits:2}); }
+function fmtPct(v){ if(v==null||isNaN(v)) return '—'; return (v*100).toFixed(2)+'%'; }
+
+/* ---------- metrics ---------- */
+function computeAuto(weekKey){
+  const wk = state.weeks[weekKey]; if(!wk) return null;
+  const S = wk.schedule;
+  let hrsWorked=0, shifts=0, openHrs=0, plHrs=0, sro=0;
+  const grpHrs = {H4:0,HQ:0,NC:0};
+  const unitByNum = {}; state.units.forEach(u=>{ unitByNum[u.homeAssign] = u; if(/^\d/.test(u.id)) unitByNum['Unit '+u.id] = unitByNum['Unit '+u.id]||u; });
+  state.units.forEach(u=>{
+    for(let si=0;si<3;si++) for(let di=0;di<7;di++){
+      ((S[u.id]&&S[u.id][si][di])||[]).forEach(sl=>{
+        const emp=(sl.emp||'').trim(), asg=(sl.assign||'').trim();
+        if(!emp && !asg) return;
+        const h = slotHours(u,si,sl);
+        const isOpen = /^OPEN/i.test(emp) || asg==='OPEN';
+        if(isOpen){ openHrs+=h; }
+        if(asg==='PL') plHrs+=h;
+        if(emp && !/^OPEN/i.test(emp)){
+          shifts++; hrsWorked+=h;
+          if(asg==='Unit SRO') sro+=h;
+          let g='';
+          if(unitByNum[asg]) g = unitByNum[asg].group;
+          else if(asg==='SOC') g = 'HQ';
+          if(grpHrs[g]!=null) grpHrs[g]+=h;
+        }
+      });
+    }
+  });
+  const m = wk.metrics||{};
+  const ovr = m.ovr||{};
+  const val = (k,auto)=> (ovr[k]!=null && ovr[k]!=='') ? +ovr[k] : auto;
+  const totalHrsWorked = val('totalHrsWorked', hrsWorked);
+  const openH = val('openHrs', openHrs);
+  const plH = val('pipelineHrs', plHrs);
+  const scheduledShifts = val('scheduledShifts', shifts);
+  const hrsShort = openH + plH;
+  const sroAvail = (m.sroAvail!=null && m.sroAvail!=='') ? +m.sroAvail : sro;
+  const nbot = +m.nbotHours||0, callIns = +m.callIns||0, dark = +m.darkPostHrs||0;
+  const callInHrs = (m.callInHrs!=null&&m.callInHrs!=='')?+m.callInHrs:callIns*8;
+  const daysOff = +m.schedDaysOff||0;
+  const tph = +state.settings.totalPostHours||2480;
+  const nbotPctRaw = totalHrsWorked? nbot/totalHrsWorked:0;
+  const totalHrsShortRaw = hrsShort;
+  const workforceShortageRaw = hrsShort - sroAvail;
+  const schedHrsOffRaw = daysOff*8;
+  const darkPostPctRaw = dark/tph;
+  const shiftCoveragePctRaw = 1 - dark/tph;
+  const callInPctRaw = scheduledShifts? callIns/scheduledShifts:0;
+  const callInNatAvgRaw = +state.settings.callInNatAvg||0.032;
+  return {
+    totalHrsWorked, nbotHours:nbot, nbotPct: val('nbotPct', nbotPctRaw),
+    pipelineHrs:plH, openHrs:openH, totalHrsShort: val('totalHrsShort', totalHrsShortRaw),
+    sroAvail, workforceShortage: val('workforceShortage', workforceShortageRaw),
+    callIns, callInHrs, schedDaysOff:daysOff, schedHrsOff: val('schedHrsOff', schedHrsOffRaw),
+    scheduledShifts, darkPostHrs:dark, darkPostPct: val('darkPostPct', darkPostPctRaw), shiftCoveragePct: val('shiftCoveragePct', shiftCoveragePctRaw),
+    callInPct: val('callInPct', callInPctRaw), callInNatAvg: val('callInNatAvg', callInNatAvgRaw),
+    h4Hrs:val('h4Hrs',grpHrs.H4), hqHrs:val('hqHrs',grpHrs.HQ), ncHrs:val('ncHrs',grpHrs.NC),
+    h4Nbot:+m.h4Nbot||0, hqNbot:+m.hqNbot||0, ncNbot:+m.ncNbot||0,
+    _autoRaw:{totalHrsWorked:hrsWorked, openHrs, pipelineHrs:plHrs, scheduledShifts:shifts, sroAvail:sro, h4Hrs:grpHrs.H4, hqHrs:grpHrs.HQ, ncHrs:grpHrs.NC,
+      nbotPct:nbotPctRaw, totalHrsShort:totalHrsShortRaw, workforceShortage:workforceShortageRaw, schedHrsOff:schedHrsOffRaw, darkPostPct:darkPostPctRaw, shiftCoveragePct:shiftCoveragePctRaw, callInPct:callInPctRaw, callInNatAvg:callInNatAvgRaw}
+  };
+}
+
+const METRIC_ROWS = [
+  {k:'totalHrsWorked', l:'Total Hrs Worked', t:'auto'},
+  {k:'nbotHours', l:'Total NBOT Hours', t:'man'},
+  {k:'nbotPct', l:'NBOT %', t:'calc', pct:1},
+  {k:'pipelineHrs', l:'Pipeline Hrs', t:'auto'},
+  {k:'openHrs', l:'OPEN Hrs', t:'auto'},
+  {k:'totalHrsShort', l:'Total Hrs Short', t:'calc'},
+  {k:'sroAvail', l:'SRO Hours Available', t:'man-auto'},
+  {k:'workforceShortage', l:'Workforce Shortage', t:'calc'},
+  {k:'callIns', l:'Call Ins', t:'man'},
+  {k:'callInHrs', l:'Call In Hrs', t:'man-auto'},
+  {k:'callInPct', l:'Call In %', t:'calc', pct:1},
+  {k:'callInNatAvg', l:'Call In National Average', t:'calc', pct:1},
+  {k:'schedDaysOff', l:'Scheduled Days Off', t:'man'},
+  {k:'schedHrsOff', l:'Scheduled Hrs Off', t:'calc'},
+  {k:'scheduledShifts', l:'Scheduled Shifts', t:'auto'},
+  {k:'darkPostHrs', l:'Dark Post Hrs', t:'man'},
+  {k:'darkPostPct', l:'Dark Post %', t:'calc', pct:1},
+  {k:'shiftCoveragePct', l:'Shift Coverage %', t:'calc', pct:1},
+  {k:'h4Hrs', l:'H4 Hrs', t:'auto'},
+  {k:'h4Nbot', l:'H4 NBOT', t:'man'},
+  {k:'hqHrs', l:'HQ Hrs', t:'auto'},
+  {k:'hqNbot', l:'HQ NBOT', t:'man'},
+  {k:'ncHrs', l:'NC Hrs', t:'auto'},
+  {k:'ncNbot', l:'NC NBOT', t:'man'},
+];
+const MANUAL_KEYS = {nbotHours:1,callIns:1,schedDaysOff:1,darkPostHrs:1,h4Nbot:1,hqNbot:1,ncNbot:1,sroAvail:1,callInHrs:1};
+
+/* ---------- duplicate / conflict detection ---------- */
+function computeDupeInfo(weekKey){
+  // per day, count how many non-empty, non-OPEN slots each employee name occupies across all units/shifts
+  const dupe = DAYS.map(()=>({}));
+  const wk = state.weeks[weekKey];
+  if(!wk) return dupe;
+  state.units.forEach(u=>{
+    const grid = unitGrid(wk,u);
+    for(let si=0;si<3;si++) for(let di=0;di<7;di++){
+      grid[si][di].forEach(sl=>{
+        const nm = (sl.emp||'').trim();
+        if(!nm || /^OPEN/i.test(nm)) return;
+        dupe[di][nm] = (dupe[di][nm]||0)+1;
+      });
+    }
+  });
+  return dupe;
+}
+function conflictsList(){
+  const out = [];
+  DAYS.forEach((d,di)=>{
+    Object.entries(dupeInfo[di]||{}).forEach(([nm,c])=>{ if(c>1) out.push({day:d, di, name:nm, count:c}); });
+  });
+  return out;
+}
+function conflictBannerHTML(){
+  const conflicts = conflictsList();
+  if(!conflicts.length) return '';
+  return `<div class="conflict-banner">&#9888; <b>Scheduling conflict${conflicts.length>1?'s':''} detected:</b> ${conflicts.map(c=>`<b>${esc(c.name)}</b> appears ${c.count}&times; on ${esc(c.day)}`).join(' &middot; ')}</div>`;
+}
+
+/* ---------- rendering ---------- */
+function renderTabs(){
+  document.getElementById('tabs').innerHTML = TABS.map(([k,l])=>
+    `<button data-tab="${k}" class="${ui.tab===k?'on':''}">${l}</button>`).join('');
+}
+function renderWeekSel(){
+  const keys = Object.keys(state.weeks).sort().reverse();
+  document.getElementById('weekSel').innerHTML = keys.map(k=>
+    `<option value="${k}" ${k===state.currentWeek?'selected':''}>Week of ${fmtRange(k)}</option>`).join('');
+}
+function render(){
+  renderTabs(); renderWeekSel();
+  dupeInfo = computeDupeInfo(state.currentWeek);
+  const v = document.getElementById('view');
+  if(ui.tab==='schedule') v.innerHTML = viewSchedule();
+  else if(ui.tab==='daily') v.innerHTML = viewDaily();
+  else if(ui.tab==='ot') v.innerHTML = viewOT();
+  else if(ui.tab==='metrics') v.innerHTML = viewMetrics();
+  else if(ui.tab==='employees') v.innerHTML = viewEmployees();
+  else if(ui.tab==='archive') v.innerHTML = viewArchive();
+  else if(ui.tab==='settings') v.innerHTML = viewSettings();
+}
+
+function slotHTML(u, ui_, si, di, k){
+  const sl = unitGrid(week(),u)[si][di][k];
+  const isOpen = /^OPEN/i.test(sl.emp||'');
+  const nmTrim = (sl.emp||'').trim();
+  const isDupe = !!(nmTrim && !isOpen && dupeInfo[di] && dupeInfo[di][nmTrim] > 1);
+  const dupeTitle = isDupe ? ` title="${esc(nmTrim)} is scheduled ${dupeInfo[di][nmTrim]}\u00d7 on ${DAYS[di]} \u2014 possible double-booking"` : '';
+  const nm = sl.emp ? `<span class="nm ${isOpen?'openName':''} ${isDupe?'dupe':''}"${dupeTitle}>${esc(sl.emp)}${isDupe?' \u26a0':''}</span>` : `<span class="nm empty">&mdash;</span>`;
+  const cls = assignClass(sl.assign, u);
+  const as = sl.assign && cls ? `<span class="as ${cls}">${esc(sl.assign)}</span>` : '';
+  const tm = (sl.start||sl.end) ? `<span class="tm">${esc(sl.start||u.shifts[si].start)}&ndash;${esc(sl.end||u.shifts[si].end)}</span>` : '';
+  return `<div class="slot ${isDupe?'conflict':''}" data-u="${ui_}" data-s="${si}" data-d="${di}" data-k="${k}">${nm}${as}${tm}</div>`;
+}
+function viewSchedule(){
+  const wk = state.currentWeek;
+  let html = conflictBannerHTML();
+  html += `<div class="legend"><b>Legend:</b>
+    <span class="as a-open">OPEN</span> unfilled post
+    <span class="as a-pl">PL</span> pipeline
+    <span class="as a-soc">SOC</span> operations center
+    <span class="as a-pto">PTO</span> paid time off
+    <span class="as a-tr">TR</span> training
+    <span class="as a-oth">Unit #</span> working a different unit
+    <span class="nm dupe" style="font-weight:800">Name &#9888;</span> scheduled more than once this day
+    <span>&middot; click any slot to assign &middot; click shift times to edit them &middot; 2 slots per shift &middot; use Copy/Paste in the slot editor to move a name between shifts</span></div>
+    <div class="grid-units">`;
+  state.units.forEach((u,uix)=>{
+    if(u.id==='SRO') return; // SRO is tracked elsewhere (Daily/Metrics) but not shown as a schedule grid card
+    html += `<div class="ucard"><h3>${esc(unitLabel(u))}${u.title?` <span style="color:var(--muted);font-weight:400;font-size:12px">&middot; ${esc(u.title)}</span>`:''} ${u.group?`<span class="tag">${esc(u.group)}</span>`:''}</h3>
+      <table class="sched"><tr><th style="width:64px">Shift</th>${DAYS_SHORT.map((d,i)=>`<th><span class="d">${d}</span><br>${dayDate(wk,i)}</th>`).join('')}</tr>`;
+    for(let si=0;si<3;si++){
+      html += `<tr class="sh${si} shrow"><td class="time" data-tu="${uix}" data-ts="${si}" title="Click to edit this shift's times">${esc(u.shifts[si].start)}&ndash;${esc(u.shifts[si].end)}<br><b>${SHIFT_NAMES[si]}</b></td>`;
+      for(let di=0;di<7;di++){
+        html += `<td>${slotHTML(u,uix,si,di,0)}${slotHTML(u,uix,si,di,1)}</td>`;
+      }
+      html += `</tr>`;
+    }
+    html += `</table></div>`;
+  });
+  return html + `</div>`;
+}
+
+function dailyAssignments(){
+  // employee name -> [7] arrays of {assign, shift}
+  const map = {};
+  activeEmployees().forEach(e=>map[e.name]=DAYS.map(()=>[]));
+  state.units.forEach(u=>{
+    for(let si=0;si<3;si++) for(let di=0;di<7;di++)
+      unitGrid(week(),u)[si][di].forEach(sl=>{
+        if(sl.emp && map[sl.emp]) map[sl.emp][di].push({assign:sl.assign||('Unit '+u.id), shift:si, unit:u});
+      });
+  });
+  return map;
+}
+function cellClass(a){
+  if(a==='OFF') return 'cOFF';
+  if(a==='OPEN') return 'cOPEN';
+  if(a==='PL') return 'cPL';
+  if(a==='SOC') return 'cSOC';
+  return '';
+}
+function viewDaily(){
+  if(ui.day==null){
+    const t=new Date(); t.setHours(0,0,0,0);
+    const s=parseISO(state.currentWeek);
+    const diff=Math.round((t-s)/86400000);
+    ui.day = (diff>=0&&diff<7)?diff:0;
+  }
+  const wk = state.currentWeek;
+  let html = conflictBannerHTML();
+  html += `<div class="daychips">${DAYS.map((d,i)=>`<button data-day="${i}" class="${ui.day===i?'on':''}">${d} ${dayDate(wk,i)}</button>`).join('')}</div>`;
+  // per-shift board for chosen day
+  html += `<div class="dayboard">`;
+  for(let si=0;si<3;si++){
+    html += `<div class="shiftcol"><h4>${SHIFT_NAMES[si]} Shift &mdash; ${DAYS[ui.day]}</h4>`;
+    let any=false;
+    state.units.forEach(u=>{
+      unitGrid(week(),u)[si][ui.day].forEach(sl=>{
+        if(sl.emp){ any=true;
+          const cls = assignClass(sl.assign,u);
+          const nmTrim = (sl.emp||'').trim();
+          const isOpenNm = /^OPEN/i.test(sl.emp);
+          const isDupe = !!(nmTrim && !isOpenNm && dupeInfo[ui.day] && dupeInfo[ui.day][nmTrim] > 1);
+          html += `<div class="ent"><b class="${isOpenNm?'openName':''} ${isDupe?'dupe':''}"${isDupe?` title="${esc(nmTrim)} is scheduled ${dupeInfo[ui.day][nmTrim]}\u00d7 today"`:''}>${esc(sl.emp)}${isDupe?' \u26a0':''}</b><span>${esc(sl.assign||u.homeAssign)} <span style="color:var(--muted)">(${esc(sl.start||u.shifts[si].start)})</span></span></div>`;
+        }
+      });
+    });
+    if(!any) html+=`<div class="ent" style="color:var(--muted)">No assignments</div>`;
+    html += `</div>`;
+  }
+  html += `</div>`;
+  // full-week matrix
+  const map = dailyAssignments();
+  html += `<div class="card"><h2>Weekly Assignment Matrix<small>every employee's daily assignment &mdash; derived from the schedule</small></h2>
+  <div class="daily-wrap"><table class="daily"><tr><th>Name</th>${DAYS.map((d,i)=>`<th>${d}<br><span style="font-weight:400">${dayDate(wk,i)}</span></th>`).join('')}</tr>`;
+  activeEmployees().forEach(e=>{
+    html += `<tr><td>${esc(e.name)}</td>`;
+    for(let di=0;di<7;di++){
+      const list = map[e.name][di];
+      const txt = list.length? list.map(x=>x.assign).join(' / ') : 'OFF';
+      const isDupe = list.length>1;
+      html += `<td class="${cellClass(txt)} ${isDupe?'dupe':''}"${isDupe?` title="${esc(e.name)} is scheduled ${list.length}\u00d7 on ${DAYS[di]}"`:''}>${esc(txt)}${isDupe?' \u26a0':''}</td>`;
+    }
+    html += `</tr>`;
+  });
+  return html + `</table></div></div>`;
+}
+
+function computeOT(weekKey){
+  const wk = state.weeks[weekKey];
+  const units = state.units;
+  const emps = activeEmployees();
+  const rows = emps.map(e=>({name:e.name, unitHours:{}, other:0, pto:0, tr:0, total:0, ot:0}));
+  const byName = {}; rows.forEach(r=>byName[r.name]=r);
+  const postTotals = {}; units.forEach(u=>postTotals[u.id]=0);
+  let ptoTotal=0, trTotal=0, otherTotal=0;
+  const unitByAssign = {};
+  units.forEach(u=>{
+    unitByAssign[u.homeAssign] = u;
+    if(/^\d/.test(u.id)) unitByAssign['Unit '+u.id] = unitByAssign['Unit '+u.id]||u;
+    else unitByAssign['Unit '+u.homeAssign] = unitByAssign['Unit '+u.homeAssign]||u;
+  });
+  units.forEach(u=>{
+    for(let si=0;si<3;si++) for(let di=0;di<7;di++){
+      unitGrid(wk,u)[si][di].forEach(sl=>{
+        if(!sl.emp) return;
+        const nm = sl.emp.trim();
+        if(!nm) return;
+        const hrs = slotHours(u,si,sl);
+        const assignRaw = (sl.assign||'').trim();
+        let bucket, targetUnit=null;
+        if(/pto/i.test(assignRaw)) bucket='pto';
+        else if(/\btr\b/i.test(assignRaw) || /training/i.test(assignRaw)) bucket='tr';
+        else {
+          targetUnit = assignRaw ? unitByAssign[assignRaw] : u;
+          bucket = targetUnit ? 'unit' : 'other';
+        }
+        if(bucket==='pto') ptoTotal += hrs;
+        else if(bucket==='tr') trTotal += hrs;
+        else if(bucket==='unit') postTotals[targetUnit.id] += hrs;
+        else otherTotal += hrs;
+        const isOpenNm = /^OPEN/i.test(nm);
+        const r = byName[nm];
+        if(r && !isOpenNm){
+          if(bucket==='pto') r.pto += hrs;
+          else if(bucket==='tr') r.tr += hrs;
+          else if(bucket==='unit') r.unitHours[targetUnit.id] = (r.unitHours[targetUnit.id]||0) + hrs;
+          else r.other += hrs;
+        }
+      });
+    }
+  });
+  rows.forEach(r=>{
+    const unitSum = units.reduce((s,u)=>s+(r.unitHours[u.id]||0),0);
+    r.total = unitSum + r.pto + r.tr + r.other;
+    const otEligible = r.total - r.pto;
+    r.ot = otEligible<=40 ? 0 : otEligible-40;
+  });
+  const grandTotal = units.reduce((s,u)=>s+postTotals[u.id],0) + ptoTotal + trTotal + otherTotal;
+  const totalOT = rows.reduce((s,r)=>s+r.ot,0);
+  const otBase = grandTotal - ptoTotal;
+  return {rows, postTotals, ptoTotal, trTotal, otherTotal, grandTotal, totalOT, otPct: otBase? totalOT/otBase : 0};
+}
+
+function viewOT(){
+  const wk = state.currentWeek;
+  const d = computeOT(wk);
+  const units = state.units;
+  let html = `<div class="card"><h2>OT Tracker <small>Week of ${fmtRange(wk)} &mdash; each employee's hours by post, plus overtime (hours over 40/week, PTO excluded)</small></h2>
+  <div class="hist-wrap"><table class="hist ot"><tr><th>Name</th>${units.map(u=>`<th>${esc(unitLabel(u))}</th>`).join('')}<th>Other</th><th>PTO</th><th>Training</th><th>Total</th><th>OT</th></tr>`;
+  d.rows.forEach(r=>{
+    html += `<tr><td>${esc(r.name)}</td>`;
+    units.forEach(u=>{ html += `<td>${fmtNum(r.unitHours[u.id]||0)}</td>`; });
+    html += `<td>${fmtNum(r.other)}</td><td>${fmtNum(r.pto)}</td><td>${fmtNum(r.tr)}</td><td><b>${fmtNum(r.total)}</b></td><td class="${r.ot>0?'otHot':''}">${fmtNum(r.ot)}</td></tr>`;
+  });
+  html += `<tr class="posttotals"><td>POST TOTALS</td>${units.map(u=>`<td>${fmtNum(d.postTotals[u.id])}</td>`).join('')}<td>${fmtNum(d.otherTotal)}</td><td>${fmtNum(d.ptoTotal)}</td><td>${fmtNum(d.trTotal)}</td><td>${fmtNum(d.grandTotal)}</td><td>${fmtNum(d.totalOT)}</td></tr>`;
+  html += `</table></div>
+  <div class="mgrid" style="margin-top:12px">
+    <div class="mrow"><span class="lbl">Total Hours (excl. PTO)</span><span class="val">${fmtNum(d.grandTotal-d.ptoTotal)}</span></div>
+    <div class="mrow"><span class="lbl">Total OT Hours</span><span class="val">${fmtNum(d.totalOT)}</span></div>
+    <div class="mrow"><span class="lbl">OT %</span><span class="val">${fmtPct(d.otPct)}</span></div>
+  </div>
+  </div>`;
+  return html;
+}
+
+function viewMetrics(){
+  const a = computeAuto(state.currentWeek);
+  const m = week().metrics||{};
+  const ovr = m.ovr||{};
+  let html = `<div class="card"><h2>Weekly Metrics <small>Week of ${fmtRange(state.currentWeek)} &mdash; <span class="badge b-auto">AUTO</span> from schedule &nbsp;<span class="badge b-man">MANUAL</span> enter value &nbsp;<span class="badge b-calc">CALC</span> formula</small></h2>
+  <div class="mgrid">`;
+  METRIC_ROWS.forEach(r=>{
+    const val = a[r.k];
+    const disp = r.pct? fmtPct(val) : fmtNum(val);
+    let right='', badge='';
+    if(r.t==='man' || r.t==='man-auto'){
+      badge = `<span class="badge b-man">MANUAL</span>`;
+      const raw = m[r.k]!=null? m[r.k] : '';
+      const ph = r.t==='man-auto' ? `auto: ${fmtNum(r.k==='callInHrs'?(+m.callIns||0)*8 : a._autoRaw[r.k]!=null?a._autoRaw[r.k]:0)}` : '0';
+      right = `<input type="number" step="any" data-metric="${r.k}" value="${esc(raw)}" placeholder="${ph}">`;
+    } else if(r.t==='auto' || r.t==='calc'){
+      badge = r.t==='auto' ? `<span class="badge b-auto">AUTO</span>` : `<span class="badge b-calc">CALC</span>`;
+      if(ui.editingOvr[r.k] || (ovr[r.k]!=null&&ovr[r.k]!=='')){
+        const phRaw = a._autoRaw[r.k]!=null ? a._autoRaw[r.k] : val;
+        const ph = r.pct ? fmtPct(phRaw) : fmtNum(phRaw);
+        right = `<span><input type="number" step="any" data-ovr="${r.k}" value="${esc(ovr[r.k]!=null?ovr[r.k]:'')}" placeholder="${ph}">
+          <span class="ovr" data-ovr-reset="${r.k}">reset</span></span>`;
+      } else {
+        right = `<span class="val">${disp}</span> <span class="ovr" data-ovr-edit="${r.k}">override</span>`;
+      }
+    }
+    html += `<div class="mrow"><span class="lbl">${r.l} ${badge}</span>${right}</div>`;
+  });
+  html += `</div></div>`;
+
+  // history table
+  html += `<div class="card"><h2>Metrics History <small>imported from Attendance Metrics + weeks saved in this app (highlighted)</small>
+    <button class="btn sm" id="btnCsv" style="float:right">Export CSV</button></h2><div class="hist-wrap"><table class="hist"><tr>
+    <th>Date Range</th><th>Hrs Worked</th><th>NBOT Hrs</th><th>NBOT %</th><th>Pipeline</th><th>OPEN</th><th>Hrs Short</th>
+    <th>SRO Avail</th><th>Shortage</th><th>Call Ins</th><th>Call In Hrs</th><th>Call In %</th><th>Days Off</th><th>Hrs Off</th>
+    <th>Shifts</th><th>Dark Hrs</th><th>Dark %</th><th>Coverage %</th><th>H4 Hrs</th><th>H4 NBOT</th><th>HQ Hrs</th><th>HQ NBOT</th><th>NC Hrs</th><th>NC NBOT</th></tr>`;
+  historyRows().forEach(r=>{
+    html += `<tr class="${r.app?'appweek':''}"><td>${esc(r.range)}${r.app?' &#9679;':''}</td>`+
+      [r.hrs,r.nbot,fmtPct(r.nbotPct),r.pl,r.open,r.short,r.sro,r.shortage,r.callIns,r.callInHrs,fmtPct(r.callInPct),r.daysOff,r.hrsOff,r.shifts,r.dark,fmtPct(r.darkPct),fmtPct(r.cov),r.h4,r.h4n,r.hq,r.hqn,r.nc,r.ncn]
+      .map(v=>`<td>${typeof v==='string'?v:fmtNum(v)}</td>`).join('')+`</tr>`;
+  });
+  html += `</table></div></div>`;
+  return html;
+}
+function historyRows(){
+  const appRanges = {};
+  Object.keys(state.weeks).forEach(k=>{
+    const a = computeAuto(k);
+    appRanges[fmtRange(k)] = {range:fmtRange(k), app:true, key:k,
+      hrs:a.totalHrsWorked, nbot:a.nbotHours, nbotPct:a.nbotPct, pl:a.pipelineHrs, open:a.openHrs, short:a.totalHrsShort,
+      sro:a.sroAvail, shortage:a.workforceShortage, callIns:a.callIns, callInHrs:a.callInHrs, callInPct:a.callInPct,
+      daysOff:a.schedDaysOff, hrsOff:a.schedHrsOff, shifts:a.scheduledShifts, dark:a.darkPostHrs, darkPct:a.darkPostPct,
+      cov:a.shiftCoveragePct, h4:a.h4Hrs, h4n:a.h4Nbot, hq:a.hqHrs, hqn:a.hqNbot, nc:a.ncHrs, ncn:a.ncNbot};
+  });
+  const rows = [];
+  (state.metricsHistory||[]).forEach(h=>{
+    const rng = h['Date Range'];
+    if(appRanges[rng]){ rows.push(appRanges[rng]); delete appRanges[rng]; return; }
+    rows.push({range:rng, app:false,
+      hrs:h['Total Hrs Worked'], nbot:h['Total NBOT Hours'], nbotPct:h['NBOT %'], pl:h['Pipeline Hrs'], open:h['OPEN Hrs'],
+      short:h['Total Hrs Short'], sro:h['SRO Hours Available'], shortage:h['Workforce Shortage'], callIns:h['Call Ins'],
+      callInHrs:h['Call In Hrs'], callInPct:h['Call In %'], daysOff:h['Scheduled Days Off'], hrsOff:h['Scheduled Hrs Off'],
+      shifts:h['Scheduled Shifts'], dark:h['Dark Post Hrs'], darkPct:h['Dark Post %'], cov:h['Shift Coverage %'],
+      h4:h['H4 Hrs'], h4n:h['H4 NBOT'], hq:h['HQ Hrs'], hqn:h['HQ NBOT'], nc:h['NC Hrs'], ncn:h['NC NBOT']});
+  });
+  Object.values(appRanges).forEach(r=>rows.push(r));
+  const key = r=>{ const [mm,dd,yy]=r.range.split(' to ')[0].split('-').map(Number); return (2000+yy)*10000+mm*100+dd; };
+  rows.sort((x,y)=>key(x)-key(y));
+  return rows;
+}
+
+function viewEmployees(){
+  const unitOpts = ['', ...assignOptions(), 'LOA'];
+  let html = `<div class="card"><h2>Employee Roster <small>edits apply everywhere immediately; uncheck Active to hide someone without deleting history</small>
+    <button class="btn sm primary" id="btnAddEmp" style="float:right">+ Add Employee</button></h2>
+    <table class="plain"><tr><th style="width:30px">#</th><th>Name</th><th style="width:120px">Home Unit</th><th style="width:100px">Building</th><th>Post Description</th><th style="width:60px">Active</th><th style="width:70px"></th></tr>`;
+  state.employees.forEach((e,i)=>{
+    html += `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><input data-emp="${i}" data-f="name" value="${esc(e.name)}"></td>
+      <td><select data-emp="${i}" data-f="unit">${unitOpts.map(o=>`<option ${o===e.unit?'selected':''}>${esc(o)}</option>`).join('')}${e.unit && !unitOpts.includes(e.unit)?`<option selected>${esc(e.unit)}</option>`:''}</select></td>
+      <td><input data-emp="${i}" data-f="building" value="${esc(e.building)}"></td>
+      <td><input data-emp="${i}" data-f="desc" value="${esc(e.desc)}"></td>
+      <td style="text-align:center"><input type="checkbox" data-emp="${i}" data-f="active" ${e.active?'checked':''}></td>
+      <td><button class="btn sm danger" data-del-emp="${i}">Delete</button></td></tr>`;
+  });
+  return html + `</table></div>`;
+}
+
+function viewArchive(){
+  const keys = Object.keys(state.weeks).sort().reverse();
+  let html = `<div class="card"><h2>Archived Weeks <small>every week is stored automatically in this browser; export JSON backups for safekeeping</small>
+    <span style="float:right">
+      <button class="btn sm" id="btnExportAll">Export All (JSON)</button>
+      <button class="btn sm" id="btnImport">Import JSON</button>
+      <input type="file" id="fileImport" accept=".json" style="display:none">
+    </span></h2>`;
+  keys.forEach(k=>{
+    const a = computeAuto(k);
+    html += `<div class="arch-item"><span class="rng">${fmtRange(k)}</span>
+      <span class="meta">${fmtNum(a.scheduledShifts)} shifts &middot; ${fmtNum(a.totalHrsWorked)} hrs worked &middot; ${fmtNum(a.openHrs)} OPEN hrs${k===state.currentWeek?' &middot; <b>current</b>':''}</span>
+      <button class="btn sm" data-load-week="${k}">Open</button>
+      <button class="btn sm" data-dup-week="${k}">Copy to New Week</button>
+      <button class="btn sm" data-export-week="${k}">Export</button>
+      <button class="btn sm danger" data-del-week="${k}">Delete</button></div>`;
+  });
+  return html + `</div>`;
+}
+
+function viewSettings(){
+  let html = `<div class="card"><h2>Units &amp; Shift Times <small>times feed the hours math; Metric Group drives the H4 / HQ / NC hour columns</small></h2>
+  <table class="plain settings-units"><tr><th>Unit</th><th>Metric Group</th><th>Day Start</th><th>Day End</th><th>Eve Start</th><th>Eve End</th><th>Night Start</th><th>Night End</th><th>Default Assignment</th><th>Print Title</th><th>Print Page</th></tr>`;
+  state.units.forEach((u,i)=>{
+    html += `<tr><td><b>${esc(unitLabel(u))}</b></td>
+    <td><select data-unit="${i}" data-f="group">${['','H4','HQ','NC'].map(g=>`<option ${g===u.group?'selected':''}>${g}</option>`).join('')}</select></td>`;
+    for(let s=0;s<3;s++) html += `<td><input data-unit="${i}" data-shift="${s}" data-f="start" value="${esc(u.shifts[s].start)}"></td><td><input data-unit="${i}" data-shift="${s}" data-f="end" value="${esc(u.shifts[s].end)}"></td>`;
+    html += `<td><input data-unit="${i}" data-f="homeAssign" value="${esc(u.homeAssign)}" style="width:100px"></td>
+    <td><input data-unit="${i}" data-f="title" value="${esc(u.title||'')}" style="width:130px"></td>
+    <td><select data-unit="${i}" data-f="ppage"><option value="">&mdash;</option>${state.printPages.map((p,pi)=>`<option value="${pi}" ${p.units.includes(u.id)?'selected':''}>Page ${pi+1}</option>`).join('')}</select></td></tr>`;
+  });
+  html += `</table></div>
+  <div class="card"><h2>Print Sheets <small>4 units per page; set each unit's page in the table above and the header text below</small></h2>
+  <div class="mgrid">${state.printPages.map((p,pi)=>`<div class="mrow"><span class="lbl">Page ${pi+1} header</span><input style="width:170px" data-pphdr="${pi}" value="${esc(p.header)}"></div>`).join('')}</div></div>
+  <div class="card"><h2>Metrics Settings</h2>
+  <div class="mgrid">
+    <div class="mrow"><span class="lbl">Total Post Hours / week (Dark Post % denominator)</span><input type="number" data-setting="totalPostHours" value="${esc(state.settings.totalPostHours)}"></div>
+    <div class="mrow"><span class="lbl">Call In National Average</span><input type="number" step="0.001" data-setting="callInNatAvg" value="${esc(state.settings.callInNatAvg)}"></div>
+  </div></div>
+  <div class="card"><h2>Data</h2>
+    <button class="btn danger" id="btnReset">Reset app to original imported data</button>
+    <div class="note">Clears all edits and restores the roster, units, sample schedule and metrics history imported from the Excel files.</div>
+  </div>`;
+  return html;
+}
+
+/* ---------- print ---------- */
+function fmtT(t){ if(!t) return ''; const p=t.split(':'); return (+p[0])+':'+p[1]; }
+function printNameCell(sl, u){
+  if(!sl || (!sl.emp && !sl.assign)) return `<td class="pnm"></td>`;
+  const open = /^OPEN/i.test(sl.emp) || sl.assign==='OPEN';
+  const extra = sl.assign && sl.assign!==u.homeAssign ? ` <i>(${esc(sl.assign)})</i>` : '';
+  return `<td class="pnm ${open?'op':''}">${esc(sl.emp||sl.assign)}${extra}</td>`;
+}
+function buildPrint(){
+  const wk = state.currentWeek, w = week();
+  const byId = {}; state.units.forEach(u=>byId[u.id]=u);
+  const pages = (state.printPages||[]).map(p=>({header:p.header, units:p.units.map(id=>byId[id]).filter(Boolean)})).filter(p=>p.units.length);
+  let html='';
+  pages.forEach((pg,pi)=>{
+    html += `<div class="ppage"><h2>${esc(pg.header)} <span>${fmtRange(wk)} &middot; Page ${pi+1} of ${pages.length}</span></h2>`;
+    pg.units.forEach(u=>{
+      const grid = unitGrid(w,u);
+      html += `<table class="ptbl">
+        <tr><td class="ptitle" colspan="8">${esc(unitLabel(u))}${u.title?' &mdash; '+esc(u.title):''}</td></tr>
+        <tr><th class="plbl"></th>${DAYS.map((d,i)=>`<th>${d}<br><span class="pdt">${dayDate(wk,i)}</span></th>`).join('')}</tr>`;
+      for(let si=0;si<3;si++){
+        const slot2has = grid[si].some(day=>day[1] && (day[1].emp||day[1].assign));
+        html += `<tr class="psh${si}"><td class="plbl" rowspan="${slot2has?4:2}">${SHIFT_NAMES[si]}</td>`;
+        for(let di=0;di<7;di++){
+          const sl = grid[si][di][0];
+          html += `<td class="ptm">${fmtT(sl.start||u.shifts[si].start)}&ndash;${fmtT(sl.end||u.shifts[si].end)}</td>`;
+        }
+        html += `</tr><tr class="psh${si}">`;
+        for(let di=0;di<7;di++) html += printNameCell(grid[si][di][0], u);
+        html += `</tr>`;
+        if(slot2has){
+          html += `<tr class="psh${si}">`;
+          for(let di=0;di<7;di++){
+            const sl = grid[si][di][1], has = sl && (sl.emp||sl.assign);
+            html += `<td class="ptm">${has?fmtT(sl.start||u.shifts[si].start)+'&ndash;'+fmtT(sl.end||u.shifts[si].end):''}</td>`;
+          }
+          html += `</tr><tr class="psh${si}">`;
+          for(let di=0;di<7;di++) html += printNameCell(grid[si][di][1], u);
+          html += `</tr>`;
+        }
+      }
+      html += `</table>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('printArea').innerHTML = html;
+}
+
+/* ---------- slot editor popover ---------- */
+let pop=null;
+let slotClipboard=null; // {emp, assign, start, end} copied from a slot, pastable into another
+function closePop(){ if(pop){ pop.remove(); pop=null; } }
+function openSlotEditor(elm){
+  closePop();
+  const u = state.units[+elm.dataset.u], si=+elm.dataset.s, di=+elm.dataset.d, k=+elm.dataset.k;
+  const sl = unitGrid(week(),u)[si][di][k];
+  pop = document.createElement('div');
+  pop.className='popover';
+  const emps = activeEmployees();
+  pop.innerHTML = `<div style="font-weight:700;font-size:12.5px">${esc(unitLabel(u))} &middot; ${SHIFT_NAMES[si]} &middot; ${DAYS[di]} &middot; Slot ${k+1}</div>
+    <label>Employee</label>
+    <select id="popEmp"><option value=""></option>${emps.map(e=>`<option ${e.name===sl.emp?'selected':''}>${esc(e.name)}</option>`).join('')}
+      ${sl.emp && !emps.some(e=>e.name===sl.emp)?`<option selected>${esc(sl.emp)}</option>`:''}</select>
+    <label>Assignment</label>
+    <select id="popAsg"><option value=""></option>${assignOptions().map(a=>`<option ${a===sl.assign?'selected':''}>${esc(a)}</option>`).join('')}
+      ${sl.assign && !assignOptions().includes(sl.assign)?`<option selected>${esc(sl.assign)}</option>`:''}</select>
+    <label>Slot Times</label>
+    <div style="display:flex;gap:6px"><input type="time" id="popStart" value="${esc(sl.start||u.shifts[si].start)}"><input type="time" id="popEnd" value="${esc(sl.end||u.shifts[si].end)}"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:3px">Shift default: ${esc(u.shifts[si].start)}&ndash;${esc(u.shifts[si].end)}${(sl.start||sl.end)?' &middot; <span class="ovr" id="popTmReset">use default</span>':''}</div>
+    <label>Copy / Paste</label>
+    <div class="row" style="margin-top:0">
+      <button class="btn sm" id="popCopy" ${(sl.emp||sl.assign)?'':'disabled'}>&#128203; Copy</button>
+      <button class="btn sm" id="popPaste" ${slotClipboard?'':'disabled'}>&#128190; Paste</button>
+      <span style="flex:1"></span>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin:2px 0 4px" id="popClipInfo">${slotClipboard?('Clipboard: <b>'+esc(slotClipboard.emp||'(blank)')+'</b>'+(slotClipboard.assign?' &middot; '+esc(slotClipboard.assign):'')):'Clipboard empty'}</div>
+    <div class="row"><button class="btn sm danger" id="popClear">Clear</button><span style="flex:1"></span>
+    <button class="btn sm" id="popCancel">Cancel</button><button class="btn sm primary" id="popSave">Save</button></div>`;
+  document.body.appendChild(pop);
+  const r = elm.getBoundingClientRect();
+  let top = r.bottom + window.scrollY + 4, left = Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - 260);
+  if(r.bottom + 260 > window.innerHeight) top = r.top + window.scrollY - pop.offsetHeight - 6;
+  pop.style.top = top+'px'; pop.style.left = left+'px';
+  const empSel = pop.querySelector('#popEmp'), asgSel = pop.querySelector('#popAsg');
+  empSel.addEventListener('change', ()=>{ if(empSel.value && !asgSel.value) asgSel.value = u.homeAssign; });
+  pop.querySelector('#popSave').onclick = ()=>{
+    sl.emp=empSel.value; sl.assign=asgSel.value;
+    const st=pop.querySelector('#popStart').value, en=pop.querySelector('#popEnd').value;
+    if(st && en && (st!==u.shifts[si].start || en!==u.shifts[si].end)){ sl.start=st; sl.end=en; }
+    else { delete sl.start; delete sl.end; }
+    persist(); closePop(); render(); };
+  pop.querySelector('#popClear').onclick = ()=>{ sl.emp=''; sl.assign=''; delete sl.start; delete sl.end; persist(); closePop(); render(); };
+  pop.querySelector('#popCancel').onclick = closePop;
+  pop.querySelector('#popCopy').onclick = ()=>{
+    slotClipboard = { emp: empSel.value, assign: asgSel.value, start: pop.querySelector('#popStart').value, end: pop.querySelector('#popEnd').value };
+    const btn = pop.querySelector('#popCopy'); const orig = btn.textContent; btn.textContent='Copied!';
+    pop.querySelector('#popPaste').disabled = false;
+    pop.querySelector('#popClipInfo').innerHTML = 'Clipboard: <b>'+esc(slotClipboard.emp||'(blank)')+'</b>'+(slotClipboard.assign?' &middot; '+esc(slotClipboard.assign):'');
+    setTimeout(()=>{ if(btn.isConnected) btn.textContent=orig; }, 900);
+  };
+  pop.querySelector('#popPaste').onclick = ()=>{
+    if(!slotClipboard) return;
+    empSel.value = slotClipboard.emp||'';
+    if(slotClipboard.assign && ![...asgSel.options].some(o=>o.value===slotClipboard.assign)){
+      const opt=document.createElement('option'); opt.value=slotClipboard.assign; opt.textContent=slotClipboard.assign; asgSel.appendChild(opt);
+    }
+    asgSel.value = slotClipboard.assign||'';
+    pop.querySelector('#popStart').value = slotClipboard.start || u.shifts[si].start;
+    pop.querySelector('#popEnd').value = slotClipboard.end || u.shifts[si].end;
+    pop.querySelector('#popCopy').disabled = !(empSel.value||asgSel.value);
+  };
+  const tmReset = pop.querySelector('#popTmReset');
+  if(tmReset) tmReset.onclick = ()=>{ delete sl.start; delete sl.end; persist(); closePop(); render(); };
+  empSel.focus();
+}
+
+function openShiftTimeEditor(elm){
+  closePop();
+  const u = state.units[+elm.dataset.tu], si=+elm.dataset.ts;
+  pop = document.createElement('div');
+  pop.className='popover';
+  pop.innerHTML = `<div style="font-weight:700;font-size:12.5px">${esc(unitLabel(u))} &middot; ${SHIFT_NAMES[si]} shift times</div>
+    <label>Start / End</label>
+    <div style="display:flex;gap:6px"><input type="time" id="shStart" value="${esc(u.shifts[si].start)}"><input type="time" id="shEnd" value="${esc(u.shifts[si].end)}"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:4px">Sets this unit's default ${SHIFT_NAMES[si]} times (all weeks). Individual slots can still override their own times.</div>
+    <div class="row"><span style="flex:1"></span><button class="btn sm" id="shCancel">Cancel</button><button class="btn sm primary" id="shSave">Save</button></div>`;
+  document.body.appendChild(pop);
+  const r = elm.getBoundingClientRect();
+  pop.style.top = (r.bottom+window.scrollY+4)+'px';
+  pop.style.left = (r.left+window.scrollX)+'px';
+  pop.querySelector('#shSave').onclick = ()=>{
+    const st=pop.querySelector('#shStart').value, en=pop.querySelector('#shEnd').value;
+    if(st && en){ u.shifts[si].start=st; u.shifts[si].end=en; persist(); }
+    closePop(); render(); };
+  pop.querySelector('#shCancel').onclick = closePop;
+}
+
+/* ---------- modal: new week ---------- */
+function openNewWeekModal(copyFrom){
+  const bg = document.createElement('div'); bg.className='modal-bg';
+  const next = isoDate(lastSaturday(new Date(Date.now()+7*86400000)));
+  const keys = Object.keys(state.weeks).sort().reverse();
+  bg.innerHTML = `<div class="modal"><h3>New Week</h3>
+    <label>Week starting (Saturday)</label><input type="date" id="nwDate" value="${next}">
+    <label>Start from</label>
+    <select id="nwCopy">
+      <option value="__blank">Blank schedule</option>
+      ${keys.map(k=>`<option value="${k}" ${copyFrom===k?'selected':''}>Copy of ${fmtRange(k)}</option>`).join('')}
+    </select>
+    <div class="row"><button class="btn" id="nwCancel">Cancel</button><button class="btn primary" id="nwOk">Create</button></div></div>`;
+  document.body.appendChild(bg);
+  if(!copyFrom && keys.length) bg.querySelector('#nwCopy').value = keys[0];
+  bg.querySelector('#nwCancel').onclick = ()=>bg.remove();
+  bg.addEventListener('click', e=>{ if(e.target===bg) bg.remove(); });
+  bg.querySelector('#nwOk').onclick = ()=>{
+    let d = bg.querySelector('#nwDate').value;
+    if(!d) return;
+    d = isoDate(lastSaturday(parseISO(d).getTime()+0 ? parseISO(d) : new Date()));
+    if(state.weeks[d]){ alert('A week starting '+fmtRange(d)+' already exists.'); return; }
+    const src = bg.querySelector('#nwCopy').value;
+    const wk = { metrics:{}, createdAt:new Date().toISOString() };
+    wk.schedule = src==='__blank' ? blankWeekSchedule() : JSON.parse(JSON.stringify(state.weeks[src].schedule));
+    state.weeks[d]=wk; state.currentWeek=d; persist();
+    bg.remove(); ui.tab='schedule'; render();
+  };
+}
+
+/* ---------- downloads ---------- */
+function download(name, text, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text],{type:type||'application/json'}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+function exportCsv(){
+  const cols = ['Date Range','Hrs Worked','NBOT Hrs','NBOT %','Pipeline','OPEN','Hrs Short','SRO Avail','Shortage','Call Ins','Call In Hrs','Call In %','Days Off','Hrs Off','Shifts','Dark Hrs','Dark %','Coverage %','H4 Hrs','H4 NBOT','HQ Hrs','HQ NBOT','NC Hrs','NC NBOT'];
+  const lines=[cols.join(',')];
+  historyRows().forEach(r=>{
+    lines.push([`"${r.range}"`,r.hrs,r.nbot,r.nbotPct,r.pl,r.open,r.short,r.sro,r.shortage,r.callIns,r.callInHrs,r.callInPct,r.daysOff,r.hrsOff,r.shifts,r.dark,r.darkPct,r.cov,r.h4,r.h4n,r.hq,r.hqn,r.nc,r.ncn]
+      .map(v=>v==null?'':v).join(','));
+  });
+  download('weekly-metrics.csv', lines.join('\n'), 'text/csv');
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-tab],[data-day],[data-tu],.slot,[data-del-emp],#btnAddEmp,[data-load-week],[data-dup-week],[data-del-week],[data-export-week],#btnExportAll,#btnImport,#btnNewWeek,#btnPrint,#btnCsv,#btnReset,[data-ovr-edit],[data-ovr-reset]');
+  if(!t){ if(pop && !e.target.closest('.popover')) closePop(); return; }
+  if(t.dataset.tab){ ui.tab=t.dataset.tab; closePop(); render(); }
+  else if(t.dataset.day!=null){ ui.day=+t.dataset.day; render(); }
+  else if(t.dataset.tu!=null){ openShiftTimeEditor(t); }
+  else if(t.classList.contains('slot')){ openSlotEditor(t); }
+  else if(t.id==='btnAddEmp'){ state.employees.push({id:'e'+Date.now(),name:'New Employee',unit:'',building:'',desc:'',active:true}); persist(); render(); }
+  else if(t.dataset.delEmp!=null){ const emp=state.employees[+t.dataset.delEmp]; if(confirm('Delete '+emp.name+'? Existing schedule entries keep the name text.')){ state.employees.splice(+t.dataset.delEmp,1); persist(); render(); } }
+  else if(t.dataset.loadWeek){ state.currentWeek=t.dataset.loadWeek; persist(); ui.tab='schedule'; render(); }
+  else if(t.dataset.dupWeek){ openNewWeekModal(t.dataset.dupWeek); }
+  else if(t.dataset.delWeek){ if(Object.keys(state.weeks).length<=1){ alert('At least one week must remain.'); return; }
+    if(confirm('Delete the week of '+fmtRange(t.dataset.delWeek)+'? This cannot be undone.')){
+      delete state.weeks[t.dataset.delWeek];
+      if(state.currentWeek===t.dataset.delWeek) state.currentWeek=Object.keys(state.weeks).sort().reverse()[0];
+      persist(); render(); } }
+  else if(t.dataset.exportWeek){ download('schedule-week-'+t.dataset.exportWeek+'.json', JSON.stringify({[t.dataset.exportWeek]:state.weeks[t.dataset.exportWeek]},null,1)); }
+  else if(t.id==='btnExportAll'){ download('schedule-app-backup-'+isoDate(new Date())+'.json', JSON.stringify(state,null,1)); }
+  else if(t.id==='btnImport'){ document.getElementById('fileImport').click(); }
+  else if(t.id==='btnNewWeek'){ openNewWeekModal(); }
+  else if(t.id==='btnPrint'){ buildPrint(); window.print(); }
+  else if(t.id==='btnCsv'){ exportCsv(); }
+  else if(t.id==='btnReset'){ if(confirm('Reset ALL data back to the original Excel import? All edits and saved weeks will be lost.')){ localStorage.removeItem(LS_KEY); load(); render(); } }
+  else if(t.dataset.ovrEdit){ ui.editingOvr[t.dataset.ovrEdit]=true; render(); }
+  else if(t.dataset.ovrReset){ const m=week().metrics; if(m.ovr) delete m.ovr[t.dataset.ovrReset]; delete ui.editingOvr[t.dataset.ovrReset]; persist(); render(); }
+});
+document.addEventListener('change', e=>{
+  const t = e.target;
+  if(t.id==='weekSel'){ state.currentWeek=t.value; persist(); render(); }
+  else if(t.dataset.emp!=null){
+    const emp = state.employees[+t.dataset.emp], f=t.dataset.f;
+    const old = emp.name;
+    if(f==='active') emp.active=t.checked; else emp[f]=t.value;
+    if(f==='name' && old!==t.value){
+      // propagate rename through all saved schedules
+      Object.values(state.weeks).forEach(w=>Object.values(w.schedule).forEach(g=>g.forEach(sh=>sh.forEach(day=>day.forEach(sl=>{ if(sl.emp===old) sl.emp=t.value; })))));
+    }
+    persist(); if(f==='active'||f==='name') render();
+  }
+  else if(t.dataset.metric){ const m=week().metrics; m[t.dataset.metric]=t.value; persist(); render(); }
+  else if(t.dataset.ovr){ const m=week().metrics; m.ovr=m.ovr||{}; m.ovr[t.dataset.ovr]=t.value; delete ui.editingOvr[t.dataset.ovr]; persist(); render(); }
+  else if(t.dataset.setting){ state.settings[t.dataset.setting]=t.value; persist(); render(); }
+  else if(t.dataset.pphdr!=null){ state.printPages[+t.dataset.pphdr].header=t.value; persist(); }
+  else if(t.dataset.unit!=null){
+    const u = state.units[+t.dataset.unit];
+    if(t.dataset.shift!=null) u.shifts[+t.dataset.shift][t.dataset.f]=t.value;
+    else if(t.dataset.f==='group') u.group=t.value;
+    else if(t.dataset.f==='ppage'){
+      state.printPages.forEach(p=>{ const ix=p.units.indexOf(u.id); if(ix>-1) p.units.splice(ix,1); });
+      if(t.value!=='') state.printPages[+t.value].units.push(u.id);
+    }
+    else u[t.dataset.f]=t.value;
+    persist();
+  }
+  else if(t.id==='fileImport'){
+    const f=t.files[0]; if(!f) return;
+    f.text().then(txt=>{
+      try{
+        const data = JSON.parse(txt);
+        if(data.weeks && data.employees){ if(confirm('Full backup detected. Replace ALL current data with this backup?')){ state=data; persist(); render(); } }
+        else{ let n=0; Object.keys(data).forEach(k=>{ if(/^\d{4}-\d{2}-\d{2}$/.test(k) && data[k].schedule){ state.weeks[k]=data[k]; n++; } });
+          persist(); render(); alert(n+' week(s) imported.'); }
+      }catch(err){ alert('Could not read that file: '+err.message); }
+      t.value='';
+    });
+  }
+});
+window.addEventListener('scroll', closePop, true);
+
+/* ---------- api ---------- */
+const API_URL = window.location.origin.includes('localhost')
+  ? 'http://localhost:3001'
+  : 'https://schedulefile-backend.onrender.com';
+let appPassword = localStorage.getItem('appPassword') || '';
+
+async function apiCall(endpoint, method = 'GET', body = null) {
+  const opts = { method, headers: { 'x-app-password': appPassword } };
+  if (body) opts.headers['Content-Type'] = 'application/json';
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API_URL + endpoint, opts);
+  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function load() {
+  try {
+    if (!appPassword) { showLogin(); return; }
+    const data = await apiCall('/api/state');
+    state = { weeks: data.weeks || {}, currentWeek: data.currentWeek || Object.keys(data.weeks || {})[0], employees: data.employees || [], printPages: data.printPages || [], settings: data.settings || {}, units: SEED.units };
+    if (!state.currentWeek && SEED.weekKey) state.currentWeek = SEED.weekKey;
+    if (!state.weeks[state.currentWeek]) state = buildInitialState();
+    migrate();
+  } catch (e) {
+    console.error('Load failed:', e);
+    if (!appPassword) { showLogin(); return; }
+    alert('Failed to load data. Check backend.');
+    state = buildInitialState();
+  }
+}
+
+async function persist() {
+  if (!appPassword) return;
+  try {
+    await apiCall('/api/week', 'POST', { weekKey: state.currentWeek, schedule_data: state.weeks[state.currentWeek] });
+    await apiCall('/api/employees', 'POST', state.employees);
+    await apiCall('/api/print-pages', 'POST', state.printPages);
+  } catch (e) {
+    console.error('Persist failed:', e);
+  }
+}
+
+function showLogin() {
+  document.getElementById('loginModal').style.display = 'flex';
+}
+
+function hideLogin() {
+  document.getElementById('loginModal').style.display = 'none';
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const pwd = document.getElementById('loginPassword').value;
+  if (!pwd) return;
+  document.getElementById('loginError').style.display = 'none';
+  try {
+    await apiCall('/api/state', 'GET');
+    appPassword = pwd;
+    localStorage.setItem('appPassword', pwd);
+    hideLogin();
+    load().then(() => render());
+  } catch (e) {
+    document.getElementById('loginError').textContent = 'Invalid password';
+    document.getElementById('loginError').style.display = 'block';
+  }
+});
+
+document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+  appPassword = '';
+  localStorage.removeItem('appPassword');
+  showLogin();
+});
+
+/* ---------- boot ---------- */
+if (appPassword) load().then(() => render());
+else { showLogin(); render(); }
+</script>
+</body>
+</html>
