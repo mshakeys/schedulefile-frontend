@@ -75,6 +75,7 @@ table.sched tr.shrow>td{border-top:2px solid #c7d2e0}
 table.sched td.time{cursor:pointer}
 table.sched td.time:hover{outline:2px solid var(--accent);outline-offset:-2px}
 .slot .tm{display:block;font-size:9px;color:#5b6b80;font-weight:600;margin-top:1px}
+.slot .tm.nonstandard{color:var(--bad)}
 .popover input[type=time]{flex:1;width:100%;padding:4px;border:1px solid var(--line);border-radius:6px}
 .popover{position:absolute;z-index:100;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(15,36,68,.18);padding:12px;width:240px}
 .popover label{display:block;font-size:11px;color:var(--muted);margin:6px 0 2px;font-weight:600}
@@ -156,6 +157,7 @@ tr.appweek td{background:#f0f9ff}
   table.ptbl th .pdt{font-weight:400;font-size:6.5pt;color:#333}
   table.ptbl th.plbl,table.ptbl td.plbl{width:34px;background:#f0f2f5;font-size:7pt;font-weight:700;text-align:center;vertical-align:middle}
   table.ptbl td.ptm{font-size:6.5pt;color:#222;text-align:center;padding:0 1px;height:9px}
+  table.ptbl td.ptm.nonstandard{color:#991b1b;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   table.ptbl td.pnm{font-size:8pt;font-weight:600;text-align:center;padding:1px 2px;height:13px;white-space:nowrap}
   table.ptbl td.pnm i{font-style:normal;font-weight:400;font-size:6.5pt;color:#444}
   table.ptbl td.pnm.op{color:#92400e;background:#fef3c7}
@@ -169,15 +171,6 @@ tr.appweek td{background:#f0f9ff}
 </style>
 </head>
 <body>
-<div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; min-width: 300px;">
-    <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem;">Security Schedule</h2>
-    <p style="margin: 0 0 1.5rem 0; color: #666;">Enter password to access</p>
-    <input type="password" id="loginPassword" placeholder="Password" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
-    <button id="loginBtn" class="btn" style="width: 100%; padding: 0.75rem;">Login</button>
-    <div id="loginError" style="color: #d32f2f; margin-top: 1rem; display: none; font-size: 0.9rem;"></div>
-  </div>
-</div>
 <div class="hdr">
   <div>
     <h1>Security Schedule &amp; Metrics</h1>
@@ -187,7 +180,6 @@ tr.appweek td{background:#f0f9ff}
   <button class="btn ghost" id="btnNewWeek">+ New Week</button>
   <div class="spacer"></div>
   <button class="btn ghost" id="btnPrint">&#128424; Print</button>
-  <button class="btn ghost" id="btnLogout" style="color: #d32f2f;">Logout</button>
 </div>
 <div class="tabs" id="tabs"></div>
 <main id="view"></main>
@@ -453,7 +445,8 @@ function slotHTML(u, ui_, si, di, k){
   const nm = sl.emp ? `<span class="nm ${isOpen?'openName':''} ${isDupe?'dupe':''}"${dupeTitle}>${esc(sl.emp)}${isDupe?' \u26a0':''}</span>` : `<span class="nm empty">&mdash;</span>`;
   const cls = assignClass(sl.assign, u);
   const as = sl.assign && cls ? `<span class="as ${cls}">${esc(sl.assign)}</span>` : '';
-  const tm = (sl.start||sl.end) ? `<span class="tm">${esc(sl.start||u.shifts[si].start)}&ndash;${esc(sl.end||u.shifts[si].end)}</span>` : '';
+  const hasNonStandard = !!(sl.start||sl.end);
+  const tm = hasNonStandard ? `<span class="tm nonstandard">${esc(sl.start||u.shifts[si].start)}&ndash;${esc(sl.end||u.shifts[si].end)}</span>` : '';
   return `<div class="slot ${isDupe?'conflict':''}" data-u="${ui_}" data-s="${si}" data-d="${di}" data-k="${k}">${nm}${as}${tm}</div>`;
 }
 function viewSchedule(){
@@ -789,7 +782,8 @@ function buildPrint(){
         html += `<tr class="psh${si}"><td class="plbl" rowspan="${slot2has?4:2}">${SHIFT_NAMES[si]}</td>`;
         for(let di=0;di<7;di++){
           const sl = grid[si][di][0];
-          html += `<td class="ptm">${fmtT(sl.start||u.shifts[si].start)}&ndash;${fmtT(sl.end||u.shifts[si].end)}</td>`;
+          const isNonStd = !!(sl.start||sl.end);
+          html += `<td class="ptm${isNonStd?' nonstandard':''}">${fmtT(sl.start||u.shifts[si].start)}&ndash;${fmtT(sl.end||u.shifts[si].end)}</td>`;
         }
         html += `</tr><tr class="psh${si}">`;
         for(let di=0;di<7;di++) html += printNameCell(grid[si][di][0], u);
@@ -798,7 +792,8 @@ function buildPrint(){
           html += `<tr class="psh${si}">`;
           for(let di=0;di<7;di++){
             const sl = grid[si][di][1], has = sl && (sl.emp||sl.assign);
-            html += `<td class="ptm">${has?fmtT(sl.start||u.shifts[si].start)+'&ndash;'+fmtT(sl.end||u.shifts[si].end):''}</td>`;
+            const isNonStd = has && !!(sl.start||sl.end);
+            html += `<td class="ptm${isNonStd?' nonstandard':''}">${has?fmtT(sl.start||u.shifts[si].start)+'&ndash;'+fmtT(sl.end||u.shifts[si].end):''}</td>`;
           }
           html += `</tr><tr class="psh${si}">`;
           for(let di=0;di<7;di++) html += printNameCell(grid[si][di][1], u);
@@ -1017,86 +1012,9 @@ document.addEventListener('change', e=>{
 });
 window.addEventListener('scroll', closePop, true);
 
-/* ---------- api ---------- */
-const API_URL = window.location.origin.includes('localhost')
-  ? 'http://localhost:3001'
-  : 'https://schedulefile-backend.onrender.com';
-let appPassword = localStorage.getItem('appPassword') || '';
-
-async function apiCall(endpoint, method = 'GET', body = null) {
-  const opts = { method, headers: { 'x-app-password': appPassword } };
-  if (body) opts.headers['Content-Type'] = 'application/json';
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(API_URL + endpoint, opts);
-  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
-  return res.json();
-}
-
-async function load() {
-  try {
-    if (!appPassword) { showLogin(); return; }
-    const data = await apiCall('/api/state');
-    state = { weeks: data.weeks || {}, currentWeek: data.currentWeek || Object.keys(data.weeks || {})[0], employees: data.employees || [], printPages: data.printPages || [], settings: data.settings || {}, units: SEED.units };
-    if (!state.currentWeek && SEED.weekKey) state.currentWeek = SEED.weekKey;
-    if (!state.weeks[state.currentWeek]) state = buildInitialState();
-    migrate();
-  } catch (e) {
-    console.error('Load failed:', e);
-    if (!appPassword) { showLogin(); return; }
-    alert('Failed to load data. Check backend.');
-    state = buildInitialState();
-  }
-}
-
-async function persist() {
-  if (!appPassword) return;
-  try {
-    await apiCall('/api/week', 'POST', { weekKey: state.currentWeek, schedule_data: state.weeks[state.currentWeek] });
-    await apiCall('/api/employees', 'POST', state.employees);
-    await apiCall('/api/print-pages', 'POST', state.printPages);
-  } catch (e) {
-    console.error('Persist failed:', e);
-  }
-}
-
-function showLogin() {
-  document.getElementById('loginModal').style.display = 'flex';
-}
-
-function hideLogin() {
-  document.getElementById('loginModal').style.display = 'none';
-}
-
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const pwd = document.getElementById('loginPassword').value;
-  if (!pwd) return;
-  document.getElementById('loginError').style.display = 'none';
-  try {
-    appPassword = pwd;
-    await apiCall('/api/state', 'GET');
-    localStorage.setItem('appPassword', pwd);
-    hideLogin();
-    load().then(() => render());
-  } catch (e) {
-    appPassword = '';
-    document.getElementById('loginError').textContent = 'Invalid password';
-    document.getElementById('loginError').style.display = 'block';
-  }
-});
-
-document.getElementById('loginPassword').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') document.getElementById('loginBtn').click();
-});
-
-document.getElementById('btnLogout').addEventListener('click', () => {
-  appPassword = '';
-  localStorage.removeItem('appPassword');
-  showLogin();
-});
-
 /* ---------- boot ---------- */
-if (appPassword) load().then(() => render());
-else { showLogin(); render(); }
+load();
+render();
 </script>
 </body>
 </html>
