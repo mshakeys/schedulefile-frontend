@@ -1072,12 +1072,13 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   if (!pwd) return;
   document.getElementById('loginError').style.display = 'none';
   try {
-    await apiCall('/api/state', 'GET');
     appPassword = pwd;
+    await apiCall('/api/state', 'GET');
     localStorage.setItem('appPassword', pwd);
     hideLogin();
     load().then(() => render());
   } catch (e) {
+    appPassword = '';
     document.getElementById('loginError').textContent = 'Invalid password';
     document.getElementById('loginError').style.display = 'block';
   }
